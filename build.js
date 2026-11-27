@@ -5,26 +5,53 @@ const uglifyjs = require("uglify-js");
 let css = "";
 let js = "";
 
+function compareAscii(a, b) {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 function handleFolder(folderPath, excludingFileName) {
-  // 读取文件夹中的所有文件和子文件夹
-  fs.readdirSync(folderPath).forEach((item) => {
-    const itemPath = path.join(folderPath, item);
-    if (fs.statSync(itemPath).isDirectory()) {
-      handleFolder(itemPath, excludingFileName);
-    } else {
-      if (item !== excludingFileName) {
-        const fileContent = fs.readFileSync(itemPath, "utf8");
-        if (item.includes(".css")) css += fileContent + "\r\n";
-        if (item.includes(".js")) js += fileContent + "\r\n";
+  // 按确定性顺序读取文件夹中的所有文件和子文件夹
+  fs.readdirSync(folderPath)
+    .sort(compareAscii)
+    .forEach((item) => {
+      const itemPath = path.join(folderPath, item);
+      if (fs.statSync(itemPath).isDirectory()) {
+        handleFolder(itemPath, excludingFileName);
+      } else {
+        if (item !== excludingFileName) {
+          const fileContent = fs.readFileSync(itemPath, "utf8");
+          if (item.endsWith(".css")) css += fileContent + "\r\n";
+          if (item.endsWith(".js")) js += fileContent + "\r\n";
+        }
+      }
+    });
+}
+
+function getVersion() {
+  const mainContent = fs.readFileSync("./src/main.js", "utf8");
+  const mainMatch = mainContent.match(/^\/\/\s*@version\s+(\S+)/m);
+  if (mainMatch && mainMatch[1]) {
+    return mainMatch[1].trim();
+  }
+
+  for (const fallbackPath of ["./src/common.js", "./src/packages/Update/Update.js"]) {
+    if (fs.existsSync(fallbackPath)) {
+      const content = fs.readFileSync(fallbackPath, "utf8");
+      const match = content.match(/var curVersion\s*=\s*"(.*?)"/);
+      if (match && match[1]) {
+        return match[1].trim();
       }
     }
-  });
+  }
+
+  throw new Error("Unable to determine version from src/main.js, src/common.js, or Update.js");
 }
 
 function generateVersion() {
-  let version = fs.readFileSync("./src/packages/Update/Update.js", "utf8");
-  version = version.match(/var curVersion = "(.*?)"/)[1];
+  const version = getVersion();
+  fs.mkdirSync("./dist", { recursive: true });
   fs.writeFileSync("./dist/douyuex_version.txt", version);
+  return version;
 }
 
 function treeShakeOnce(code) {
@@ -100,13 +127,15 @@ function extractHeader(code) {
 }
 
 function build() {
-  generateVersion();
+  fs.mkdirSync("./dist", { recursive: true });
+  const version = generateVersion();
   handleFolder("./src", "main.js");
-  css = css.replace(/\r\n/g, "");
+  css = css.replace(/\r?\n/g, "");
   let template = fs.readFileSync("./src/main.js", "utf8");
-  template = template.replace("/*编译器标记 勿删*/", css).replace("// 编译器标记 勿删", js);
-
-  if (!fs.existsSync("./dist")) fs.mkdirSync("./dist");
+  template = template
+    .replace("/*编译器标记 勿删*/", () => css)
+    .replace("// 编译器标记 勿删", () => js)
+    .replace(/var curVersion\s*=\s*".*?";/, () => `var curVersion = "${version}";`);
 
   const { header, body } = extractHeader(template);
   const shakenBody = treeShake(body);
@@ -114,6 +143,9 @@ function build() {
   fs.writeFileSync("./dist/douyuex.js", header + shakenBody);
 
   const result = uglifyjs.minify(shakenBody, { toplevel: true });
+  if (result.error) {
+    throw result.error;
+  }
   fs.writeFileSync("./dist/douyuex.user.js", header + result.code);
 }
 

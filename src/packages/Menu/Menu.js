@@ -1,5 +1,4 @@
+// 已移除原 douyuex.com 检查更新菜单项
 function initPkg_Menu() {
-    GM_registerMenuCommand(`检查更新`, () => {
-        Update_checkVersion(true);
-    })
+  // no-op
 }

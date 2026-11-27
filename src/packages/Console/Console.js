@@ -3,7 +3,7 @@ function initPkg_Console() {
 }
 
 function console_watermark_douyEx() {
-    // console.log("DouyuEx插件官网 http://www.douyuex.com")
+    const version = typeof curVersion !== "undefined" ? curVersion : "";
     console.log(`%c
    ______                    _____)
   (, /    )                /
@@ -12,6 +12,6 @@ function console_watermark_douyEx() {
 (_/___ /        .-/     (_____)  /
                (_/
 
-%cver ${curVersion}`,'color:rgb(255,121,35);font-size:20px;font-weight:bold;', "color:red;font-size:16px;")
+%cver ${version}`, 'color:rgb(255,121,35);font-size:20px;font-weight:bold;', "color:red;font-size:16px;");
     return;
 }

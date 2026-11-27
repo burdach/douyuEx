@@ -10,7 +10,7 @@
 let scriptHookCallbackList = [];
 
 function applyInlineScriptHooks(node) {
-  if (node.tagName !== "SCRIPT" || node.src || !node.textContent) {
+  if (!node || node.tagName !== "SCRIPT" || node.src || !node.textContent) {
     return node;
   }
 
@@ -21,7 +21,14 @@ function applyInlineScriptHooks(node) {
 
   let content = node.textContent;
   for (let i = 0; i < inlineCallbacks.length; i++) {
-    content = inlineCallbacks[i].callback(content);
+    try {
+      const next = inlineCallbacks[i].callback(content);
+      if (typeof next === "string") {
+        content = next;
+      }
+    } catch (err) {
+      console.warn("[DouyuEx] ScriptHook inline callback failed:", err);
+    }
   }
 
   if (content !== node.textContent) {
@@ -31,7 +38,7 @@ function applyInlineScriptHooks(node) {
   return node;
 }
 
-function handleExternalScript(node, insertFn, targetNode) {
+function handleExternalScript(node, insertFn, appendFn, targetNode, referenceNode) {
   const src = node.src;
   const callbacks = [];
 
@@ -46,7 +53,7 @@ function handleExternalScript(node, insertFn, targetNode) {
     return false;
   }
 
-  fetchAndReplace(src, callbacks, targetNode);
+  fetchAndReplace(node, callbacks, targetNode, insertFn, appendFn, referenceNode);
   return true;
 }
 
@@ -55,9 +62,9 @@ function initScriptHook() {
   const originalInsertBefore = Node.prototype.insertBefore;
 
   Node.prototype.appendChild = function (node) {
-    if (node.tagName === "SCRIPT") {
-      if (node.src && handleExternalScript(node, originalAppendChild, this)) {
-        return document.createDocumentFragment();
+    if (node && node.tagName === "SCRIPT") {
+      if (node.src && handleExternalScript(node, originalAppendChild, originalAppendChild, this, null)) {
+        return node;
       }
       node = applyInlineScriptHooks(node);
     }
@@ -66,9 +73,9 @@ function initScriptHook() {
   };
 
   Node.prototype.insertBefore = function (node, referenceNode) {
-    if (node.tagName === "SCRIPT") {
-      if (node.src && handleExternalScript(node, originalInsertBefore, this)) {
-        return document.createDocumentFragment();
+    if (node && node.tagName === "SCRIPT") {
+      if (node.src && handleExternalScript(node, originalInsertBefore, originalAppendChild, this, referenceNode)) {
+        return node;
       }
       node = applyInlineScriptHooks(node);
     }
@@ -77,30 +84,88 @@ function initScriptHook() {
   };
 }
 
+function notifyScriptHookEvent(node, eventType) {
+  if (!node) {
+    return;
+  }
+  try {
+    node.dispatchEvent(new Event(eventType));
+  } catch (err) {
+    try {
+      const handler = eventType === "load" ? node.onload : node.onerror;
+      if (typeof handler === "function") {
+        handler.call(node, { type: eventType, target: node, currentTarget: node });
+      }
+    } catch (cbErr) {
+      console.warn(`[DouyuEx] ScriptHook ${eventType} handler failed:`, cbErr);
+    }
+  }
+}
+
 /**
  * 获取源码、修改并注入的函数
- * @param {string} url - 脚本URL
+ * @param {HTMLScriptElement} origNode - 原始脚本节点
  * @param {Array} callbacks - 匹配到的回调函数列表
  * @param {Node} targetNode - 原始脚本应该插入的父节点
+ * @param {Function} insertFn - 原始插入方法
+ * @param {Function} appendFn - 原始 appendChild 方法
+ * @param {Node|null} referenceNode - insertBefore 参考节点
  */
-function fetchAndReplace(url, callbacks, targetNode) {
+function fetchAndReplace(origNode, callbacks, targetNode, insertFn, appendFn, referenceNode) {
+  const url = origNode.src;
+  const insertModified = (scriptEl) => {
+    try {
+      if (referenceNode && referenceNode.parentNode === targetNode) {
+        insertFn.call(targetNode, scriptEl, referenceNode);
+      } else {
+        const host = targetNode || document.head || document.documentElement;
+        if (host) {
+          appendFn.call(host, scriptEl);
+        }
+      }
+    } catch (err) {
+      const fallbackHost = document.head || document.documentElement;
+      if (fallbackHost) {
+        appendFn.call(fallbackHost, scriptEl);
+      }
+    }
+  };
+
   GM_xmlhttpRequest({
     method: "GET",
     url: url,
     onload: function (response) {
+      if (response.status >= 400 || typeof response.responseText !== "string") {
+        console.error("[DouyuEx] ScriptHook HTTP error:", response.status, url);
+        notifyScriptHookEvent(origNode, "error");
+        return;
+      }
       let modifiedContent = response.responseText;
 
       for (let m = 0; m < callbacks.length; m++) {
-        modifiedContent = callbacks[m].callback(modifiedContent);
+        try {
+          const next = callbacks[m].callback(modifiedContent);
+          if (typeof next === "string") {
+            modifiedContent = next;
+          }
+        } catch (err) {
+          console.warn("[DouyuEx] ScriptHook external callback failed:", err);
+        }
       }
 
       const newScript = document.createElement("script");
-      newScript.type = "text/javascript";
+      newScript.type = origNode.type || "text/javascript";
       newScript.textContent = modifiedContent;
-      targetNode.appendChild(newScript);
+      insertModified(newScript);
+      notifyScriptHookEvent(origNode, "load");
     },
     onerror: function (err) {
-      console.error("Error loading script via GM_xmlhttpRequest:", err);
+      console.error("[DouyuEx] Error loading script via GM_xmlhttpRequest:", err);
+      notifyScriptHookEvent(origNode, "error");
+    },
+    ontimeout: function () {
+      console.error("[DouyuEx] Timeout loading script via GM_xmlhttpRequest:", url);
+      notifyScriptHookEvent(origNode, "error");
     }
   });
 }

@@ -61,37 +61,130 @@ function initRouter_Motorcade() {
 
 function initRouter_DouyuRoom_Popup() {
     // 画中画
-    removeAD();
+    safeInit("RemoveAD_Style", removeAD);
+    let retryCount = 0;
+    const maxRetries = 30;
     let intID = setInterval(() => {
-        if (typeof (document.querySelector('div.wfs-2a8e83')) !== "undefined") {
-            document.querySelector('div.wfs-2a8e83').click();
-            document.querySelector('label.layout-Player-asidetoggleButton').click();
-            let l = document.querySelectorAll(".tip-e3420a > ul > li").length;
-            document.querySelectorAll(".tip-e3420a > ul > li")[l - 1].click();
+        retryCount++;
+        const isAlreadyWfs = document.body && (
+            document.body.classList.contains("is-fullScreenPage") ||
+            !!document.querySelector(".wfs-2a8e83[class*='removed-']")
+        );
+        const wfsBtn = isAlreadyWfs ? null : findPopupWebFullscreenBtn();
+        if (isAlreadyWfs || wfsBtn) {
+            clearInterval(intID);
+            if (wfsBtn) {
+                try { wfsBtn.click(); } catch (e) {}
+            }
+            const asideBtn = document.querySelector("label.layout-Player-asidetoggleButton");
+            if (asideBtn) {
+                try { asideBtn.click(); } catch (e) {}
+            }
+            const qualityItems = findPopupQualityItems();
+            if (qualityItems.length > 0) {
+                try { qualityItems[qualityItems.length - 1].click(); } catch (e) {}
+            }
+            return;
+        }
+        if (retryCount >= maxRetries) {
             clearInterval(intID);
         }
     }, 1000);
 }
 
+function findPopupWebFullscreenBtn() {
+    const classicBtn = document.querySelector("div.wfs-2a8e83, [class*='wfs-']");
+    if (classicBtn) return classicBtn;
+    const bar = document.getElementById("js-player-controlbar");
+    if (!bar) return null;
+    const rightBar = bar.querySelector('[class*="right-"]');
+    const scope = rightBar || bar;
+    const labeled = scope.querySelector('[aria-label*="网页全屏"], [title*="网页全屏"]');
+    if (labeled) {
+        const text = (labeled.getAttribute("aria-label") || labeled.getAttribute("title") || "");
+        if (!text.includes("退出网页全屏")) return labeled;
+    }
+    if (rightBar) {
+        const directIcons = Array.from(rightBar.children).filter((el) => el.tagName === "I");
+        for (const icon of directIcons) {
+            const txt = icon.textContent || "";
+            if (txt.includes("网页全屏") && !txt.includes("退出网页全屏")) return icon;
+            if (icon.querySelector('path[d*="M20 25h6v-6"], path[d*="M14 7H8v6"]')) return icon;
+        }
+        if (rightBar.querySelector('[class*="rate-"]') && directIcons.length >= 3) {
+            return directIcons[directIcons.length - 2];
+        }
+    }
+    return null;
+}
+
+function findPopupQualityItems() {
+    const classicItems = document.querySelectorAll(".tip-e3420a > ul > li");
+    if (classicItems.length > 0) return classicItems;
+    const tipItems = document.querySelectorAll('[class*="tipItem-"]');
+    for (const item of tipItems) {
+        const input = item.querySelector("input");
+        if (input && String(input.value || "").includes("画质")) {
+            const lis = item.querySelectorAll("ul > li");
+            if (lis.length > 0) return lis;
+        }
+    }
+    return [];
+}
+
 
 function initRouter_DouyuRoom_Main() {
     // 主要
-    document.domain = "douyu.com";
+    try {
+        document.domain = "douyu.com";
+    } catch (e) {}
     init();
-    let intID = setInterval(() => {
-        let dom1 = document.getElementsByClassName("BackpackButton")[0];
-        let dom2 = document.getElementsByClassName("Barrage-main")[0];
-        let dom3 = document.querySelector("#js-backpack-enter")
-        if (!dom2 || (!dom1 && !dom3)) {
-            return;
+    let started = false;
+    let retryCount = 0;
+    const maxRetries = 30;
+    const startMain = () => {
+        if (started) return;
+        started = true;
+        if (!rid && typeof extractRoomId === "function") {
+            rid = extractRoomId();
         }
         setTimeout(() => {
-            initStyles();
-            initPkg();
-            initPkgSpecial();
-            initTimer();
-        }, 1500)
-        clearInterval(intID);
+            safeInit("initStyles", initStyles);
+            safeInit("initPkg", initPkg);
+            safeInit("initPkgSpecial", initPkgSpecial);
+            safeInit("initTimer", initTimer);
+        }, 1500);
+    };
+    let intID = setInterval(() => {
+        retryCount++;
+        const hasPrimary = !!(
+            document.querySelector(".Barrage-main") ||
+            document.querySelector("#js-player-controlbar")
+        );
+        const hasSecondary = !!(
+            document.querySelector("#js-backpack-enter") ||
+            document.querySelector(".BackpackButton") ||
+            document.querySelector("#js-player-toolbar") ||
+            document.querySelector("#__h5player")
+        );
+        if (hasPrimary && hasSecondary) {
+            clearInterval(intID);
+            startMain();
+            return;
+        }
+        if (retryCount >= maxRetries) {
+            clearInterval(intID);
+            const hasPlayerFallback = !!(
+                document.querySelector("#__video2") ||
+                document.querySelector("#__h5player") ||
+                document.querySelector(".room-Player-Box") ||
+                document.querySelector("video")
+            );
+            if (hasPlayerFallback) {
+                console.warn("[DouyuEx] Bootstrap landmarks timed out; starting via player fallback.");
+                startMain();
+            }
+        }
     }, 1000);
 }
 
@@ -103,7 +196,9 @@ function initPkgSpecial() {
 // }
 
 function initRouter_Yuba() {
-    document.domain = "douyu.com";
+    try {
+        document.domain = "douyu.com";
+    } catch (e) {}
     RestoreYuba_checkRedirect();
 }
 

@@ -16,6 +16,7 @@ function PopupPlayer_insertIcon() {
     a.innerHTML = '<a class="ex-panel__icon" title="同屏播放"><svg style="display:block;" t="1579448049771" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1804" width="30" height="30"><path d="M353.024 900.416H109.952c-57.856 0-109.952-46.336-109.952-98.432V153.6c0-52.096 52.096-98.432 109.952-98.432h810.176c57.856 0 104.192 46.336 104.192 98.496v185.472c0 28.928-23.168 52.096-46.336 52.096s-46.272-23.168-46.272-52.096V159.36H98.368V807.68h248.896c34.688 0 52.032 17.408 52.032 46.336 0 28.928-17.344 46.272-46.272 46.272" fill="#f26b1f" p-id="1805"></path><path d="M619.2 631.488c-5.76 0-5.76 5.76-5.76 11.52v223.04c0 5.76 5.76 11.52 5.76 11.52h289.344c5.76 0 11.584-5.76 11.584-11.52v-222.976c0-5.824-5.76-11.584-11.52-11.584H619.136z m289.344 338.688h-289.28a103.68 103.68 0 0 1-104.192-104.128v-222.976c0-57.92 46.272-109.952 104.128-109.952h289.344c57.856 0 104.128 46.272 104.128 109.952v222.976c5.824 57.856-40.448 104.128-104.128 104.128z" fill="#f26b1f" p-id="1806"></path></svg><i id="popup-player__tip" class="ex-panel__tip"></i></a>';
 
     let b = document.getElementsByClassName("ex-panel__wrap")[0];
+    if (!b) return;
     b.insertBefore(a, b.childNodes[0]);
 
 }
@@ -28,7 +29,7 @@ function PopupPlayer_insertPrompt() {
     html += '<div class="postbird-box-dialog">';
     html += '<div style="min-height:170px" class="postbird-box-content">';
     html += '<div class="postbird-box-header">';
-    html += '<span class="postbird-box-title"><span>请输入直播间/直播流地址：</span><a style="float:right;color:royalblue;" href="http://live.douyuex.com/" target="_blank">DouyuEx联播</a></span>';
+    html += '<span class="postbird-box-title"><span>请输入直播间/直播流地址：</span></span>';
     html += '</div>'; // header
     html += '<div class="postbird-box-text">';
     html += '<input id="popup-player__url" value="https://www.douyu.com/4042402" style="height:30px;box-sizing:border-box" type="text" class="postbird-prompt-input" autofocus="true">';
@@ -39,16 +40,20 @@ function PopupPlayer_insertPrompt() {
 
     a.innerHTML = html;
 
-    let b = getValidDom([".layout-Main", ".playerWrap__8wGvw", ".live-next-body"]);
+    let b = getValidDom([".layout-Main", ".playerWrap__8wGvw", ".live-next-body"]) || document.body;
+    if (!b) return;
     b.insertBefore(a, b.childNodes[0]);
 }
 
 function initPkg_PopupPlayer_Func() {
-    document.getElementsByClassName("popup-player")[0].addEventListener("click", function () {
-        document.getElementById("popup-player__prompt").style.display = "block";
+    let iconBtn = document.getElementsByClassName("popup-player")[0];
+    let promptDom = document.getElementById("popup-player__prompt");
+    if (!iconBtn || !promptDom) return;
+    iconBtn.addEventListener("click", function () {
+        promptDom.style.display = "block";
     });
     document.getElementById("popup-player__cancel").addEventListener("click", function() {
-        document.getElementById("popup-player__prompt").style.display = "none";
+        promptDom.style.display = "none";
     })
     document.getElementById("popup-player__ok").addEventListener("click", function() {
         let roomUrl = document.getElementById("popup-player__url").value;
@@ -85,12 +90,12 @@ function initPkg_PopupPlayer_Func() {
         } else {
             showMessage("请输入地址", "error");
         }
-        document.getElementById("popup-player__prompt").style.display = "none";
+        promptDom.style.display = "none";
     })
-    document.getElementById("popup-player__prompt").addEventListener("keydown", function(event) {
-        let theEvent = window.event || e;
-        let code = theEvent.keyCode || theEvent.which || theEvent.charCode;
-        if (code == 13) {
+    promptDom.addEventListener("keydown", function(event) {
+        let theEvent = event || window.event;
+        let code = theEvent ? (theEvent.keyCode || theEvent.which || theEvent.charCode) : 0;
+        if (code == 13 || (theEvent && theEvent.key === "Enter")) {
             document.getElementById("popup-player__ok").click();
         }
     })
@@ -365,7 +370,7 @@ function createNewVideo_Bilibili(id, rid){
             html += "<div class='exVideoInfo' id='exVideoInfo" + String(id) + "'><a title='进入直播间' target='_blank' href='https://live.bilibili.com/"+  rid + "'><span class='exVideoRID' id='exVideoRID" + String(id) + "' style='color:white'>" + "Bilibili - " + rid + "</span></a>";
             html += "<select class='exVideoQn' id='exVideoQn" + String(id) + "'><option value='1'>流畅</option><option value='2'>高清</option><option value='3'>超清</option><option value='4'>蓝光</option><option value='5'>原画</option></select>";
             html += "<select class='exVideoCDN' id='exVideoCDN" + String(id) + "'><option value='1'>主线路</option><option value='2'>备用线路1</option><option value='3'>备用线路2</option><option value='4'>备用线路3</option></select>";
-            html += `<input id='exVideoEmbed${String(id)}' type='button' value='    ' style='height:30px;'>`;
+            html += `<input id='exVideoEmbed${String(id)}' type='button' value='嵌入视频' style='height:30px;'>`;
             html += `<input id='exVideoUnEmbed${String(id)}' type='button' value='恢复视频' style='height:30px;display:none;'>`;
             html += `<input id='exVideoCopy${String(id)}' type='button' value='复制直播流' style='height:30px;'>`;
             html += "<a><div class='exVideoClose' id='exVideoClose" + String(id) + "'>X</div></a>"
@@ -606,7 +611,10 @@ function setElementFunc_iframe(id) {
     let box = document.getElementById("exVideoDiv" + String(id));
     let exVideoClose = document.getElementById("exVideoClose" + String(id));
     exVideoClose.onclick = function() {
-        videoPlayerArr[id].destroy();
+        if (videoPlayerArr[id] && typeof videoPlayerArr[id].destroy === "function") {
+            videoPlayerArr[id].destroy();
+        }
+        videoPlayerArr[id] = null;
         box.remove();
     }
     box.onclick = function(e) {

@@ -1,28 +1,64 @@
 // 全局变量及公共函数
+var curVersion = "2026.11.27.01";
 var exTimer = 0; // 总时钟句柄
-var url = document.getElementsByTagName('html')[0].innerHTML;
-var urlLen = ("$ROOM.room_id =").length;
-var ridPos = url.indexOf('$ROOM.room_id =');
-var rid = "";
-if (ridPos > 0) {
-	rid = url.substring(ridPos + urlLen, url.indexOf(';', ridPos + urlLen));
-	if (rid) rid = rid.trim();
-} else {
-	rid = getStrMiddle(url, `roomID:`, `,`);
-	if (rid) {
-		rid = rid.trim();
-	} else {
-		let canonicalLink = document.querySelector(`link[rel="canonical"]`);
-		if (canonicalLink) {
-			let href = canonicalLink.getAttribute(`href`);
-			rid = href.split('/').pop().trim();
+
+function extractRoomId() {
+	try {
+		if (typeof unsafeWindow !== "undefined" && unsafeWindow.$ROOM && unsafeWindow.$ROOM.room_id) {
+			const roomId = String(unsafeWindow.$ROOM.room_id).trim();
+			if (isRid(roomId)) return roomId;
 		}
-	}
+	} catch (e) {}
+
+	try {
+		const canonicalLink = document.querySelector(`link[rel="canonical"]`);
+		if (canonicalLink) {
+			const href = canonicalLink.getAttribute("href") || "";
+			const cleanHref = href.split("?")[0].split("#")[0].replace(/\/+$/, "");
+			const candidate = cleanHref.split("/").pop().trim();
+			if (isRid(candidate)) return candidate;
+		}
+	} catch (e) {}
+
+	try {
+		const searchParams = new URLSearchParams(window.location.search || "");
+		const queryRid = (searchParams.get("rid") || "").trim();
+		if (isRid(queryRid)) return queryRid;
+	} catch (e) {}
+
+	try {
+		const htmlEl = document.documentElement || document.getElementsByTagName("html")[0];
+		const html = htmlEl ? htmlEl.innerHTML : "";
+		if (html) {
+			const marker = "$ROOM.room_id =";
+			const ridPos = html.indexOf(marker);
+			if (ridPos > 0) {
+				const endPos = html.indexOf(";", ridPos + marker.length);
+				if (endPos > ridPos) {
+					const candidate = html.substring(ridPos + marker.length, endPos).replace(/["'\s]/g, "");
+					if (isRid(candidate)) return candidate;
+				}
+			}
+			const mid = getStrMiddle(html, `roomID:`, `,`);
+			if (mid) {
+				const candidate = String(mid).replace(/["'\s]/g, "");
+				if (isRid(candidate)) return candidate;
+			}
+		}
+	} catch (e) {}
+
+	try {
+		const pathname = (window.location.pathname || "").replace(/\/+$/, "");
+		const seg = pathname.split("/").pop().trim();
+		if (isRid(seg)) return seg;
+		const match = pathname.match(/\/(\d+)(?:\/|$)/);
+		if (match && isRid(match[1])) return match[1];
+	} catch (e) {}
+
+	return "";
 }
 
-url = null;	
-urlLen = null;
-ridPos = null;
+var rid = extractRoomId();
 var my_uid = getCookieValue("acf_uid"); // 自己的uid
 var myName = "";
 var dyToken = getToken();
@@ -530,7 +566,7 @@ function getCsrfToken() {
       withCredentials: true,
       onload: function(response) {
         // 获取 Set-Cookie
-        const setCookie = response.responseHeaders.match(/set-cookie:[^\n\r]+/gi);
+        const setCookie = (response && response.responseHeaders ? response.responseHeaders : "").match(/set-cookie:[^\n\r]+/gi) || [];
 				// 从set-cookie中获取csrfToken
 				let csrfToken = "";
 				for (const line of setCookie) {
@@ -549,12 +585,48 @@ function getCsrfToken() {
   });
 }
 
+function isElementVisible(el) {
+	if (!el || !el.isConnected) {
+		return false;
+	}
+	if (typeof window.getComputedStyle === "function") {
+		const style = window.getComputedStyle(el);
+		if (style.display === "none" || style.visibility === "hidden") {
+			return false;
+		}
+	}
+	if (typeof el.getBoundingClientRect === "function") {
+		const rect = el.getBoundingClientRect();
+		return rect.width > 0 && rect.height > 0;
+	}
+	return el.offsetParent !== null;
+}
+
 function getValidDom(queryList) {
 	for (const query of queryList) {
 		let dom = null;
 		if (typeof query === "string") {
 			dom = document.querySelector(query);
 		} else {
+			dom = query;
+		}
+		if (dom) return dom;
+	}
+	return null;
+}
+
+function getValidVisibleDom(queryList) {
+	for (const query of queryList) {
+		let dom = null;
+		if (typeof query === "string") {
+			const nodes = document.querySelectorAll(query);
+			for (let i = 0; i < nodes.length; i++) {
+				if (isElementVisible(nodes[i])) {
+					dom = nodes[i];
+					break;
+				}
+			}
+		} else if (isElementVisible(query)) {
 			dom = query;
 		}
 		if (dom) return dom;
