@@ -225,10 +225,16 @@ function LiveTool_Vote_insertDom_VotePanel() {
     `;
     a.innerHTML = panel;
     
-    let b = getValidDom([".layout-Player-main", "main"]);
-    b.insertBefore(a, b.childNodes[0]);
+    let b = getValidDom([".layout-Player-main", "#js-player-main", ".stage__D8VhO", "main"]) || document.body;
+    if (!b) {
+        return;
+    }
+    b.insertBefore(a, b.childNodes[0] || null);
 
     let box = document.getElementsByClassName("vote__result")[0];
+    if (!box) {
+        return;
+    }
     box.onmousedown = function (event) {
         event.stopPropagation();
         let xx = event.clientX - box.offsetLeft;
@@ -249,9 +255,15 @@ function LiveTool_Vote_insertDom_VotePanel() {
         }
     }
 
-    document.getElementById("vote__result-close").addEventListener("click", () => {
-        document.getElementsByClassName("vote__result")[0].style.display = "none";
-    })
+    let closeBtn = document.getElementById("vote__result-close");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+            let resultDom = document.getElementsByClassName("vote__result")[0];
+            if (resultDom) {
+                resultDom.style.display = "none";
+            }
+        });
+    }
 }
 
 

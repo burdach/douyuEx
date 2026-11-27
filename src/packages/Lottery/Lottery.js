@@ -196,22 +196,34 @@ function getExLotteryInfo(room_id) {
 
 async function setFansBadgeList() {
 	let ret = [];
-	let doc = await fetch('https://www.douyu.com/member/cp/getFansBadgeList',{
+	let html = await fetch('https://www.douyu.com/member/cp/getFansBadgeList',{
 		method: 'GET',
 		mode: 'no-cors',
 		cache: 'default',
 		credentials: 'include',
 	}).then(res => {
-		return res.text();
+		return res && res.text ? res.text() : "";
 	}).catch(err => {
 		console.log("请求失败!", err);
-	})
-	doc = (new DOMParser()).parseFromString(doc, 'text/html');
-	let a = doc.getElementsByClassName("fans-badge-list")[0].lastElementChild;
+		return "";
+	});
+	if (!html || typeof html !== "string" || typeof DOMParser === "undefined") {
+		myFansBadgeList = ret;
+		return;
+	}
+	let doc = (new DOMParser()).parseFromString(html, 'text/html');
+	let badgeList = doc && doc.getElementsByClassName ? doc.getElementsByClassName("fans-badge-list")[0] : null;
+	let a = badgeList && badgeList.lastElementChild;
+	if (!a || !a.children) {
+		myFansBadgeList = ret;
+		return;
+	}
 	let n = a.children.length;
 	for (let i = 0; i < n; i++) {
 		let rid = a.children[i].getAttribute("data-fans-room");
-		ret.push(rid);
+		if (rid) {
+			ret.push(rid);
+		}
 	}
 	myFansBadgeList = ret;
 }
