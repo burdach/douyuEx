@@ -15,7 +15,8 @@
     z-index: 5;
 }
 
-.danmuContent-25f266 {
+.danmuContent-25f266,
+#Ex_BarragePanel [class*="danmuContent-"] {
     pointer-events: auto !important;
 }
 

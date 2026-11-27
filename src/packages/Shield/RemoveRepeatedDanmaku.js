@@ -13,11 +13,13 @@ let repeatedDanmakuOriginalFontSizeMap = new WeakMap();
 // 清理定时器
 let repeatedDanmakuCleanupTimer = null;
 let repeatedDanmakuDomHook = null;
-
-if (isRemoveRepeatedDanmaku) removeRepeatedDanmaku();
+let repeatedDanmakuPollTimer = null;
 
 function initPkg_Shield_RemoveRepeatedDanmaku() {
   const shieldTool = document.getElementsByClassName("FilterKeywords")[0];
+  if (!shieldTool) return;
+  if (document.getElementById("ex-removeRepeatedDanmaku")) return;
+
   shieldTool.insertAdjacentHTML(
     "afterbegin",
     `<div class="FilterSwitchStatus" id="ex-removeRepeatedDanmaku">
@@ -42,70 +44,82 @@ function initPkg_Shield_RemoveRepeatedDanmaku() {
   );
 
   const dom = document.getElementById("ex-removeRepeatedDanmaku");
+  if (!dom) return;
   const statusSpan = dom.querySelector(".FilterSwitchStatus-status");
   const switchSpan = dom.querySelector(".FilterSwitchStatus-switch");
   const secondsInput = document.getElementById("ex-repeatedDanmakuSeconds");
   const enlargeCheckbox = document.getElementById("ex-enlargeDanmaku");
 
   // 阻止输入框和checkbox点击事件冒泡
-  secondsInput.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-  enlargeCheckbox.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
-
-  // 输入框值改变事件
-  secondsInput.addEventListener("input", () => {
-    let value = parseInt(secondsInput.value);
-    if (isNaN(value) || value < 1) {
-      value = 1;
-      secondsInput.value = 1;
-    } else if (value > 300) {
-      value = 300;
-      secondsInput.value = 300;
-    }
-    repeatedDanmakuSeconds = value;
-    setLocalRepeatedDanmakuSeconds(value);
-
-    // 如果功能已开启，需要重启以应用新设置
-    if (isRemoveRepeatedDanmaku) {
-      if (repeatedDanmakuDomHook) {
-        repeatedDanmakuDomHook.closeHook();
-        repeatedDanmakuDomHook = null;
+  if (secondsInput) {
+    secondsInput.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+    // 输入框值改变事件
+    secondsInput.addEventListener("input", () => {
+      let value = parseInt(secondsInput.value);
+      if (isNaN(value) || value < 1) {
+        value = 1;
+        secondsInput.value = 1;
+      } else if (value > 300) {
+        value = 300;
+        secondsInput.value = 300;
       }
-      stopRepeatedDanmakuCleanupTimer();
-      removeRepeatedDanmaku();
-    }
-  });
+      repeatedDanmakuSeconds = value;
+      setLocalRepeatedDanmakuSeconds(value);
 
-  // checkbox改变事件
-  enlargeCheckbox.addEventListener("change", () => {
-    isEnlargeDanmaku = enlargeCheckbox.checked;
-    setLocalIsEnlargeDanmaku(isEnlargeDanmaku);
-  });
+      // 如果功能已开启，需要重启以应用新设置
+      if (isRemoveRepeatedDanmaku) {
+        stopRepeatedDanmakuHook();
+        stopRepeatedDanmakuCleanupTimer();
+        removeRepeatedDanmaku();
+      }
+    });
+  }
+
+  if (enlargeCheckbox) {
+    enlargeCheckbox.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+    // checkbox改变事件
+    enlargeCheckbox.addEventListener("change", () => {
+      isEnlargeDanmaku = enlargeCheckbox.checked;
+      setLocalIsEnlargeDanmaku(isEnlargeDanmaku);
+    });
+  }
 
   dom.addEventListener("click", () => {
     isRemoveRepeatedDanmaku = !isRemoveRepeatedDanmaku;
     if (isRemoveRepeatedDanmaku) {
       removeRepeatedDanmaku();
-      statusSpan.className = statusSpan.className.replace("is-noChecked", "is-checked");
-      statusSpan.textContent = "已开启";
-      switchSpan.className = switchSpan.className.replace("is-noChecked", "is-checked");
     } else {
-      if (repeatedDanmakuDomHook) {
-        repeatedDanmakuDomHook.closeHook();
-        repeatedDanmakuDomHook = null;
-      }
+      stopRepeatedDanmakuHook();
       stopRepeatedDanmakuCleanupTimer();
       StyleHook_remove("Ex_Style_RemoveRepeatedDanmaku");
       StyleHook_remove("Ex_Style_RemoveRepeatedDanmaku_Count");
-      statusSpan.className = statusSpan.className.replace("is-checked", "is-noChecked");
-      statusSpan.textContent = "未开启";
-      switchSpan.className = switchSpan.className.replace("is-checked", "is-noChecked");
+    }
+    if (statusSpan) {
+      statusSpan.classList.toggle("is-checked", isRemoveRepeatedDanmaku);
+      statusSpan.classList.toggle("is-noChecked", !isRemoveRepeatedDanmaku);
+      statusSpan.textContent = isRemoveRepeatedDanmaku ? "已开启" : "未开启";
+    }
+    if (switchSpan) {
+      switchSpan.classList.toggle("is-checked", isRemoveRepeatedDanmaku);
+      switchSpan.classList.toggle("is-noChecked", !isRemoveRepeatedDanmaku);
     }
     saveRemoveRepeatedDanmaku();
   });
+}
+
+function stopRepeatedDanmakuHook() {
+  if (repeatedDanmakuPollTimer) {
+    clearInterval(repeatedDanmakuPollTimer);
+    repeatedDanmakuPollTimer = null;
+  }
+  if (repeatedDanmakuDomHook) {
+    repeatedDanmakuDomHook.closeHook();
+    repeatedDanmakuDomHook = null;
+  }
 }
 
 function initPkg_Shield_RemoveRepeatedDanmaku_ScriptHook() {
@@ -158,24 +172,41 @@ function removeRepeatedDanmaku() {
     `
   );
 
-  let timer = setInterval(() => {
-    const dom = document.querySelector(".danmu-fbb2a3");
-    if (dom) {
-      clearInterval(timer);
+  stopRepeatedDanmakuHook();
+  let pollCount = 0;
+  repeatedDanmakuPollTimer = setInterval(() => {
+    pollCount++;
+    const danmuSelector = document.querySelector(".danmu-fbb2a3")
+      ? ".danmu-fbb2a3"
+      : document.querySelector('#__h5player [class*="danmu-"]')
+      ? '#__h5player [class*="danmu-"]'
+      : "";
+    if (danmuSelector) {
+      clearInterval(repeatedDanmakuPollTimer);
+      repeatedDanmakuPollTimer = null;
       // 开启定期清理定时器
       startRepeatedDanmakuCleanupTimer();
 
-      repeatedDanmakuDomHook = new DomHook(".danmu-fbb2a3", false, (m) => {
+      repeatedDanmakuDomHook = new DomHook(danmuSelector, false, (m) => {
         if (m.length <= 0) return;
         if (!isRemoveRepeatedDanmaku) return;
         if (m[0].addedNodes.length <= 0 && m[0].removedNodes.length > 0) {
           const removedDom = m[0].removedNodes[0];
-          const uuid = removedDom.comment.uuid;
-          const endTime = removedDom.comment.startTime + removedDom.comment.duration;
+          if (!removedDom || removedDom.nodeType !== 1) return;
+          const comment = removedDom.comment;
+          const uuid =
+            (comment && comment.uuid) ||
+            (typeof removedDom.getAttribute === "function" ? removedDom.getAttribute("data-comment-uuid") : "") ||
+            "";
           const now = Date.now();
-          if (now > endTime) return;
-          // 存储过期时间戳
-          repeatedDanmakuUuidMap[uuid] = now + repeatedDanmakuSeconds * 1000;
+          if (comment && typeof comment.startTime === "number" && typeof comment.duration === "number") {
+            const endTime = comment.startTime + comment.duration;
+            if (now > endTime) return;
+            if (uuid) {
+              // 存储过期时间戳
+              repeatedDanmakuUuidMap[uuid] = now + repeatedDanmakuSeconds * 1000;
+            }
+          }
 
           // 清理与该弹幕相关的DOM映射，防止内存泄露
           const danmakuText = removedDom.textContent ? removedDom.textContent.trim() : "";
@@ -191,12 +222,17 @@ function removeRepeatedDanmaku() {
 
         if (m[0].addedNodes.length <= 0) return;
         const dom = m[0].addedNodes[0];
-        if (!dom) return;
+        if (!dom || dom.nodeType !== 1) return;
         const now = Date.now();
-        const uuid = dom.comment.uuid;
-        // 检查 UUID 是否存在且未过期
-        const uuidExpireTime = repeatedDanmakuUuidMap[uuid];
-        if (uuidExpireTime && now <= uuidExpireTime) return;
+        const uuid =
+          (dom.comment && dom.comment.uuid) ||
+          (typeof dom.getAttribute === "function" ? dom.getAttribute("data-comment-uuid") : "") ||
+          "";
+        if (uuid) {
+          // 检查 UUID 是否存在且未过期
+          const uuidExpireTime = repeatedDanmakuUuidMap[uuid];
+          if (uuidExpireTime && now <= uuidExpireTime) return;
+        }
 
         const danmakuText = dom.textContent ? dom.textContent.trim() : "";
         if (!danmakuText || danmakuText.length === 0) return;
@@ -206,7 +242,7 @@ function removeRepeatedDanmaku() {
 
         if (expireTime && now <= expireTime) {
           // 这是重复弹幕，隐藏它
-          dom.className += " repeated-danmaku";
+          dom.classList.add("repeated-danmaku");
 
           // 增加重复次数
           repeatedDanmakuCountMap[danmakuText] = (repeatedDanmakuCountMap[danmakuText] || 1) + 1;
@@ -246,6 +282,9 @@ function removeRepeatedDanmaku() {
           repeatedDanmakuCountMap[danmakuText] = 1;
         }
       });
+    } else if (pollCount >= 60) {
+      clearInterval(repeatedDanmakuPollTimer);
+      repeatedDanmakuPollTimer = null;
     }
   }, 1000);
 }
@@ -306,7 +345,7 @@ function getLocalRepeatedDanmakuSeconds() {
   const saved = localStorage.getItem("ExSave_repeatedDanmakuSeconds");
   if (saved) {
     const value = parseInt(saved);
-    if (!isNaN(value) && value >= 1 && value <= 60) {
+    if (!isNaN(value) && value >= 1 && value <= 300) {
       return value;
     }
   }

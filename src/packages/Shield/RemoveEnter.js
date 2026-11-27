@@ -1,12 +1,36 @@
 let isRemoveEnterBarrage = getLocalIsRemoveEnterBarrage();
+
+function applyRemoveEnterBarrage(enabled) {
+  const isSupported = window.CSS && window.CSS.supports && window.CSS.supports("--enter-display", "none");
+  const barrageExtendContainer = document.getElementById("js-barrage-extend-container");
+  if (enabled) {
+    StyleHook_set(
+      "Ex_Style_RemoveEnter",
+      `
+        #js-barrage-extend-container,
+        #js-barrage-extendList,
+        .Barrage-userEnter,
+        .Barrage-listItem.is-extendBarrage {
+          display: none !important;
+        }
+      `
+    );
+    if (isSupported && barrageExtendContainer) {
+      barrageExtendContainer.style.setProperty("--enter-display", "none", "important");
+    }
+  } else {
+    StyleHook_remove("Ex_Style_RemoveEnter");
+    if (isSupported && barrageExtendContainer) {
+      barrageExtendContainer.style.setProperty("--enter-display", "block", "important");
+    }
+  }
+}
+
 function initPkg_Shield_RemoveEnter() {
   const shieldTool = document.getElementsByClassName("FilterKeywords")[0];
-  let isSupported = window.CSS && window.CSS.supports && window.CSS.supports('--enter-display', 'none'); //CSS变量兼容性检测
-  let barrageExtendContainer = document.getElementById("js-barrage-extend-container");
-  
-  if (shieldTool == undefined || !isSupported)
-      return;
-  
+  if (!shieldTool) return;
+  if (document.getElementById("ex-removeEnterBarrage")) return;
+
   shieldTool.insertAdjacentHTML(
     "afterbegin",
     `<div class="FilterSwitchStatus" id="ex-removeEnterBarrage">
@@ -19,27 +43,24 @@ function initPkg_Shield_RemoveEnter() {
     </div>
   </div>`
   );
-  
-  if (isRemoveEnterBarrage) {
-    barrageExtendContainer && barrageExtendContainer.style.setProperty("--enter-display", "none", "important");
-  } else {
-    barrageExtendContainer && barrageExtendContainer.style.setProperty("--enter-display", "block", "important");
-  }
+
+  applyRemoveEnterBarrage(isRemoveEnterBarrage);
+
   const dom = document.getElementById("ex-removeEnterBarrage");
+  if (!dom) return;
   const statusSpan = dom.querySelector(".FilterSwitchStatus-status");
   const switchSpan = dom.querySelector(".FilterSwitchStatus-switch");
   dom.addEventListener("click", () => {
     isRemoveEnterBarrage = !isRemoveEnterBarrage;
-    if (isRemoveEnterBarrage) {
-      barrageExtendContainer && barrageExtendContainer.style.setProperty("--enter-display", "none", "important");
-      statusSpan.className = statusSpan.className.replace("is-noChecked", "is-checked");
-      statusSpan.textContent = "已开启";
-      switchSpan.className = switchSpan.className.replace("is-noChecked", "is-checked");
-    } else {
-      barrageExtendContainer && barrageExtendContainer.style.setProperty("--enter-display", "block", "important");
-      statusSpan.className = statusSpan.className.replace("is-checked", "is-noChecked");
-      statusSpan.textContent = "未开启";
-      switchSpan.className = switchSpan.className.replace("is-checked", "is-noChecked");
+    applyRemoveEnterBarrage(isRemoveEnterBarrage);
+    if (statusSpan) {
+      statusSpan.classList.toggle("is-checked", isRemoveEnterBarrage);
+      statusSpan.classList.toggle("is-noChecked", !isRemoveEnterBarrage);
+      statusSpan.textContent = isRemoveEnterBarrage ? "已开启" : "未开启";
+    }
+    if (switchSpan) {
+      switchSpan.classList.toggle("is-checked", isRemoveEnterBarrage);
+      switchSpan.classList.toggle("is-noChecked", !isRemoveEnterBarrage);
     }
     saveRemoveEnterBarrage();
   });

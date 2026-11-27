@@ -13,11 +13,14 @@ function FansContinue_insertIcon() {
     '<a class="ex-panel__icon" title="一键续牌"><img style="width: 32px;height: 32px;" src="https://gfs-op.douyucdn.cn/dygift/1705/7db9beee246848252f1c7fe916259f4e.png"/><i id="fans-continue__tip" class="ex-panel__tip"></i></a>';
 
   let b = document.getElementsByClassName("ex-panel__wrap")[0];
+  if (!b) return;
   b.insertBefore(a, b.childNodes[0]);
 }
 
 function initPkg_FansContinue_Func() {
-  document.getElementsByClassName("fans-continue")[0].addEventListener("click", function () {
+  const dom = document.getElementsByClassName("fans-continue")[0];
+  if (!dom) return;
+  dom.addEventListener("click", function () {
     const saved = localStorage.getItem("ExSave_FansContinue");
     const defValue = saved != null ? saved : "1";
     PostbirdAlertBox.prompt({
@@ -40,7 +43,7 @@ function initPkg_FansContinue_Func() {
 
 function FansContinue_startSend(sendNum) {
   let giftId = 0;
-  let conut = 0;
+  let count = 0;
 
   getBagGifts(rid, (ret) => {
     let chunkNum = ret.data?.list?.length || 0;
@@ -74,8 +77,11 @@ function FansContinue_startSend(sendNum) {
       })
       .then(async (doc) => {
         doc = new DOMParser().parseFromString(doc, "text/html");
-        let a = doc.getElementsByClassName("fans-badge-list")[0].lastElementChild;
+        const listDom = doc.getElementsByClassName("fans-badge-list")[0];
+        if (!listDom || !listDom.lastElementChild) return;
+        let a = listDom.lastElementChild;
         let n = a.children.length;
+        if (n === 0) return;
         if (sendNum == 0) sendNum = Math.floor(count / n);
 
         for (let i = 0; i < n; i++) {

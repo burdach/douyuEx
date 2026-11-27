@@ -15,14 +15,22 @@ function initPkg_ChangeDanmakuLengthLimit() {
 }
 
 function changeChatTextareaMaxLength() {
-  let a;
-
-  a = document.getElementsByClassName("ChatSend-button")[0];
-  if (a != undefined) {
-    a.className = "ChatSend-button";
+  const sendBtn = document.getElementsByClassName("ChatSend-button")[0];
+  if (sendBtn != undefined) {
+    sendBtn.classList.remove("is-gray");
   }
-  a = document.getElementsByClassName("ChatSend-txt")[0];
-  if (a != undefined) {
-    a.maxLength = a.maxLength + 20; // 原来为50字符，修改成70字符
+  const chatInput = document.getElementsByClassName("ChatSend-txt")[0];
+  if (chatInput != undefined) {
+    if (chatInput.tagName === "TEXTAREA") {
+      const currentMax = Number(chatInput.maxLength);
+      if (!Number.isNaN(currentMax) && currentMax > 0) {
+        chatInput.maxLength = currentMax + 20; // 原来为50字符，修改成70字符
+      }
+    } else if (chatInput.isContentEditable || chatInput.getAttribute("contenteditable") === "true") {
+      const maxAttr = parseInt(chatInput.getAttribute("maxlength"), 10);
+      if (!Number.isNaN(maxAttr) && maxAttr > 0) {
+        chatInput.setAttribute("maxlength", String(maxAttr + 20));
+      }
+    }
   }
 }

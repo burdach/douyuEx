@@ -1,0 +1,25 @@
+.ex-shield-effect .ex-panel__icon {
+  cursor: pointer;
+  border-radius: 6px;
+  color: #7c8594;
+  transition: transform 0.3s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.ex-shield-effect .ex-panel__icon svg {
+  display: block;
+}
+
+.ex-shield-effect .ex-panel__icon:not(.is-active) svg {
+  opacity: 0.75;
+}
+
+.ex-shield-effect .ex-panel__icon.is-active {
+  color: #16a34a;
+  background-color: rgba(34, 197, 94, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.55);
+}
+
+.ex-shield-effect .ex-panel__icon.is-active .ex-panel__tip {
+  display: block;
+  background: #22c55e;
+}

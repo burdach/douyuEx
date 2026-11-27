@@ -259,7 +259,7 @@ function initPkg_LiveTool_Enter_Handle(text) {
         let level = getStrMiddle(text, "level@=", "/");
         for (const item of enterWordList) {
             if (Number(level) >= Number(item.level)) {
-                reply = String(item.word).replace(/<id>/g, nn);
+                let reply = String(item.word).replace(/<id>/g, nn);
                 sendBarrage(reply);
                 break;
             }

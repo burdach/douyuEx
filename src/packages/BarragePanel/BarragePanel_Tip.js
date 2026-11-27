@@ -16,12 +16,13 @@ function setBarragePanelTipCallBack() {
 }
 
 function renderBarragePanelTip() {
+    if (document.getElementById("barrage-panel-tip__+1")) return;
+    const labelDom = getValidDom([".labelfisrt-407af4", "#comment-dzjy-container [class*='labelfisrt-']"]);
+    if (!labelDom || !labelDom.parentElement) return;
+    const dom = labelDom.parentElement;
+
     let a = document.createElement("div");
     a.style.display = "inline-block";
-
-    const labelDoms = document.getElementsByClassName("labelfisrt-407af4");
-    if (labelDoms.length === 0) return;
-    const dom = labelDoms[0].parentElement;
     dom.appendChild(a);
 
 
@@ -32,21 +33,25 @@ function renderBarragePanelTip() {
 
     a = document.createElement("div");
     a.className = "labelfisrt-407af4 thirdBtn-06cde5 fourBtn-0845d4";
-    a.id = "barrage-panel-tip__+1"
+    a.id = "barrage-panel-tip__+1";
     a.innerText = "+1";
     dom.appendChild(a);
 }
 
 function setBarragePanelTipFunc() {
-    document.getElementById("barrage-panel-tip__+1").onclick = () => {
+    const plusOneBtn = document.getElementById("barrage-panel-tip__+1");
+    if (!plusOneBtn) return;
+    plusOneBtn.onclick = () => {
         const dom = document.getElementById("comment-higher-container");
-        if (dom.getElementsByClassName("ex-image-danmaku").length > 0) {
-            const textDom = dom.getElementsByClassName("text-879f3e")[0];
+        if (!dom) return;
+        if (dom.getElementsByClassName("ex-image-danmaku").length > 0 && typeof getImageDanmakuFromImgSrc === "function") {
+            const textDom = dom.querySelector(".text-879f3e, [class*='text-']");
+            if (!textDom) return;
             sendBarrage(textDom.innerHTML.replace(/<a[^>]*><img\s+(?:.*?\s+)?src="(.*?)"[^>]*?\/?><\/a>/g, (match, src) => {
                 return getImageDanmakuFromImgSrc(src);
             }));
         } else {
             sendBarrage(dom.innerText);
         }
-    }
+    };
 }

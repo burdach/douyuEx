@@ -1,8 +1,9 @@
 function initPkg_BarragePanel() {
 	let timer = setInterval(() => {
-        if (document.getElementsByClassName("danmuTips-1ee820").length > 0) {
+        const tipDom = getValidDom([".danmuTips-1ee820", "[class*='danmuTips-']"]);
+        if (tipDom && tipDom.parentElement) {
             clearInterval(timer);
-            document.getElementsByClassName("danmuTips-1ee820")[0].parentElement.id = "Ex_BarragePanel";
+            tipDom.parentElement.id = "Ex_BarragePanel";
             setBarragePanelCallBack();
         }
     }, 1500);
@@ -25,10 +26,11 @@ function barragePanel__withGuard(fn) {
 }
 
 function barragePanel__replaceImageDanmakuInPanel() {
-    const contentDom = document.getElementsByClassName("danmuContent-25f266")[0];
+    const contentDom = getValidDom([".danmuContent-25f266", "#Ex_BarragePanel [class*='danmuContent-']"]);
     if (!contentDom) return;
     const oldText = contentDom.innerHTML;
     if (!oldText.includes(`[DouyuEx图片`)) return;
+    if (typeof getImageDanmakuHtml !== "function") return;
     const newText = oldText.replace(/\[DouyuEx图片(.*?)\]/g, (match, str) => getImageDanmakuHtml(str));
     if (newText !== oldText) contentDom.innerHTML = newText;
 }
@@ -48,15 +50,14 @@ function setBarragePanelCallBack() {
                     let addedNodes = m[0].addedNodes;
                     if (addedNodes.length > 0) {
                         let barragePanel = addedNodes[0];
-                        if ("getElementsByClassName" in barragePanel == false) {
+                        if (!barragePanel || typeof barragePanel.querySelector !== "function") {
                             return;
                         }
-                        const barragePanelButton = barragePanel.getElementsByClassName("buttonGroup-de6b66")[0];
-                        let userNameDom = barragePanel.getElementsByClassName("danmuAuthor-3d7b4a");
-                        let id = "";
-                        if (userNameDom.length > 0) {
-                            id = userNameDom[0].innerText;
-                            setUserFansMedal(userNameDom[0], id);
+                        const barragePanelButton = barragePanel.querySelector(".buttonGroup-de6b66, [class*='buttonGroup-']");
+                        const userNameNode = barragePanel.querySelector(".danmuAuthor-3d7b4a, [class*='danmuAuthor-']");
+                        if (userNameNode && barragePanelButton) {
+                            const id = userNameNode.innerText;
+                            setUserFansMedal(userNameNode, id);
                             setReplyBarrageButton(barragePanelButton);
                             setSearchBarrageButton(barragePanelButton);
                             setBarragePanelButtonSplit(barragePanelButton);
@@ -69,17 +70,16 @@ function setBarragePanelCallBack() {
                     if (tmp.length > 0) {
                         tmp[0].remove();
                     }
-                    let barragePanel = document.getElementsByClassName("danmudiv-32f498")[0];
-                    if (barragePanel == undefined) {
+                    let barragePanel = getValidDom([".danmudiv-32f498", "#Ex_BarragePanel [class*='danmudiv-']"]);
+                    if (!barragePanel) {
                         return;
                     }
-                    const barragePanelButton = barragePanel.getElementsByClassName("buttonGroup-de6b66")[0];
-                    let userNameDom = barragePanel.getElementsByClassName("danmuAuthor-3d7b4a");
+                    const barragePanelButton = barragePanel.querySelector(".buttonGroup-de6b66, [class*='buttonGroup-']");
+                    const userNameNode = barragePanel.querySelector(".danmuAuthor-3d7b4a, [class*='danmuAuthor-']");
 
-                    let id = "";
-                    if (userNameDom.length > 0) {
-                        id = userNameDom[0].innerText;
-                        setUserFansMedal(userNameDom[0], id);
+                    if (userNameNode && barragePanelButton) {
+                        const id = userNameNode.innerText;
+                        setUserFansMedal(userNameNode, id);
                         setReplyBarrageButton(barragePanelButton);
                         setSearchBarrageButton(barragePanelButton);
                         setBarragePanelButtonSplit(barragePanelButton);
@@ -230,34 +230,42 @@ function setReplyBarrageButton(dom) {
 }
 
 function setBarrgePanelFunc(parentDom, id) {
-    document.getElementById("barragePanel__reply").onclick = () => {
-        let txt = document.getElementsByClassName("danmuContent-25f266")[0].innerText;
-        const chatDom = document.getElementsByClassName("ChatSend-txt")[0];
-        const value = `@${ id }：${ txt }`;
-        if (chatDom.tagName == "TEXTAREA") {
-            chatDom.value = value;
-        } else {
-            chatDom.innerText = value;
-        }
-        chatDom.focus();
-    };
+    const replyBtn = document.getElementById("barragePanel__reply");
+    if (replyBtn) {
+        replyBtn.onclick = () => {
+            const contentDom = getValidDom([".danmuContent-25f266", "#Ex_BarragePanel [class*='danmuContent-']"]);
+            const txt = contentDom ? contentDom.innerText : "";
+            const chatDom = document.getElementsByClassName("ChatSend-txt")[0];
+            if (!chatDom) return;
+            const value = `@${ id }：${ txt }`;
+            setChatInputText(chatDom, value);
+            chatDom.focus();
+        };
+    }
 
-    document.getElementById("barragePanel__mute").onclick = async () => {
-        let value = document.getElementById("barragePanel__muteSelect").value || "1";
-        let ret = await addMuteUser(rid, id, value);
-        if (ret.msg == "添加成功") {
-            showMessage(`【禁言】${id}已被禁言${value}分钟`, "success");
-        } else {
-            showMessage(ret.msg, "error");
-        }
-    };
+    const muteBtn = document.getElementById("barragePanel__mute");
+    if (muteBtn) {
+        muteBtn.onclick = async () => {
+            const muteSelect = document.getElementById("barragePanel__muteSelect");
+            let value = (muteSelect && muteSelect.value) || "1";
+            let ret = await addMuteUser(rid, id, value);
+            if (ret && ret.msg == "添加成功") {
+                showMessage(`【禁言】${id}已被禁言${value}分钟`, "success");
+            } else {
+                showMessage((ret && ret.msg) || "禁言失败", "error");
+            }
+        };
+    }
     
-    document.getElementById("barragePanel__search").onclick = async () => {
-        let uid = await getUserUid(id);
-        if (uid !== "") {
-            openPage(`https://www.doseeing.com/data/fan/${uid}?type=chat&dt=0`, true);
-        }
-    };
+    const searchBtn = document.getElementById("barragePanel__search");
+    if (searchBtn) {
+        searchBtn.onclick = async () => {
+            let uid = await getUserUid(id);
+            if (uid !== "") {
+                openPage(`https://www.doseeing.com/data/fan/${uid}?type=chat&dt=0`, true);
+            }
+        };
+    }
 }
 
 function insertBarragePanel_SearchBarrage_Dom(parentDom) {
@@ -311,16 +319,19 @@ function getUserUid(name) {
             onload: function(response) {
                 let ret = response.response;
                 let success = true;
-                if (!ret.suggest) success = false;
-                if (!ret.suggest.fan) success = false;
-                if (ret.suggest.fan.length === 0) success = false;
-                if (ret.suggest.fan[0].nickname !== name) success = false;
+                if (!ret || !ret.suggest) success = false;
+                if (success && !ret.suggest.fan) success = false;
+                if (success && ret.suggest.fan.length === 0) success = false;
+                if (success && ret.suggest.fan[0].nickname !== name) success = false;
                 if (success) {
                     resolve(ret.suggest.fan[0].user_id);
                 } else {
                     resolve("");
                     return;
                 }
+            },
+            onerror: function() {
+                resolve("");
             }
         });
     });

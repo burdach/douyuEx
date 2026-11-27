@@ -36,6 +36,7 @@ function initPkg_RealAudience() {
 	}).then(res => {
 		return res.json();
 	}).then(retData => {
+		if (!retData || !retData.data) return;
 		real_info.showtime = retData.data.show_time;
 		real_info.isShow = retData.data.show_status;
 		setRealViewer();
@@ -49,7 +50,7 @@ function initPkg_RealAudience() {
 function initPkg_RealAudience_StyleHook() {
 	StyleHook_set("Ex_Style_RealAudience", `
     .VideoEntry{display:none !important;}
-	.layout-Player-rank{top:34px !important;}
+	body:not(.live-next-body) .layout-Player-rank{top:34px !important;}
     `);
 }
 
@@ -76,22 +77,35 @@ function initPkg_RealAudience_Dom() {
 	html += '<span id="real-audience__watchtime" style="white-space: nowrap;display: none;">' + "已观看:" + "****" + "</span>";
 	a.innerHTML = html;
 	
-	let b = getValidDom([".layout-Player-announce", ".layout-Player-rankAll"]);
+	let b = getValidDom([".layout-Player-announce", ".layout-Player-rankAll", ".layout-Player-rank", "#js-player-asideMain"]);
+	if (!b) return;
 	b.insertBefore(a, b.childNodes[0]);
 }
 
 function initPkg_RealAudience_Func() {
-	document.getElementsByClassName("real-audience")[0].addEventListener("click", function() {
+	const dom = document.getElementsByClassName("real-audience")[0];
+	if (!dom) return;
+	dom.addEventListener("click", function() {
 		openPage(`https://www.doseeing.com/room/${rid}`, true);
-	})
+	});
 }
 
 async function setRealViewer() {
 	if(document.querySelector(".MatchSystemChatRoomEntry") != null){
 		document.querySelector(".MatchSystemChatRoomEntry").style.display = "none";
 	}
-	let retData = await getRealViewer(rid);
-	let todayWatchData = await getTodayWatch(rid);
+	let retData;
+	let todayWatchData;
+	try {
+		retData = await getRealViewer(rid);
+	} catch (e) {
+		retData = null;
+	}
+	try {
+		todayWatchData = await getTodayWatch(rid);
+	} catch (e) {
+		todayWatchData = null;
+	}
 	let showedTime = 0;
 	if (real_info.isShow == 2) {
 		showedTime = 0;
@@ -102,29 +116,42 @@ async function setRealViewer() {
 			showedTime = Math.floor(Date.now()/1000) - Number(real_info.showtime);
 		}
 	}
-	real_info.view = retData.data["active.uv"] || 0;
-	real_info.danmu_person_count = retData.data["chat.uv"] || 0;
-	real_info.gift_person_count = retData.data["gift.all.uv"] || 0;
-	real_info.paid_person_count = retData.data["gift.paid.uv"] || 0;
-	real_info.money_yc = Number(retData.data["gift.paid.price"] / 100 || 0).toFixed(2);
-	real_info.money_total = Number(retData.data["gift.all.price"] / 100 || 0).toFixed(2);
-	
-	document.getElementById("real-audience__total").innerText = real_info.view;
-	document.getElementById("real-audience__t").title = "今日累计活跃人数:" + real_info.view + " 弹幕人数:" + real_info.danmu_person_count + " 送礼人数:" + real_info.gift_person_count + " 付费人数:" + real_info.paid_person_count;
-	document.getElementById("real-audience__barrage").innerText = real_info.danmu_person_count;
-	// document.getElementById("real-audience__gift").innerText = real_info.gift_person_count;
-	document.getElementById("real-audience__money_yc").innerText = real_info.money_yc;
-	document.getElementById("real-audience__money").title = "总礼物价值:" + real_info.money_total + " 鱼翅礼物:" + real_info.money_yc;
-	if (real_info.noble_count !== "") {
-		document.getElementById("real-audience__noble").innerText = formatNobleCount(real_info.noble_count);
+	if (retData && retData.data) {
+		real_info.view = retData.data["active.uv"] || 0;
+		real_info.danmu_person_count = retData.data["chat.uv"] || 0;
+		real_info.gift_person_count = retData.data["gift.all.uv"] || 0;
+		real_info.paid_person_count = retData.data["gift.paid.uv"] || 0;
+		real_info.money_yc = Number(retData.data["gift.paid.price"] / 100 || 0).toFixed(2);
+		real_info.money_total = Number(retData.data["gift.all.price"] / 100 || 0).toFixed(2);
 	}
 	
-	document.getElementById("real-audience__time").innerText = "已播:" + formatSeconds(showedTime);
-	document.getElementById("real-audience__time").title = "开播时间:" + String(dateFormat("yyyy年MM月dd日hh时mm分ss秒 ",new Date(Number(real_info.showtime + "000")))) + "\n已观看:" + formatSeconds(todayWatchData.data.todayWatch);
+	const totalDom = document.getElementById("real-audience__total");
+	const totalWrap = document.getElementById("real-audience__t");
+	const barrageDom = document.getElementById("real-audience__barrage");
+	const moneyYcDom = document.getElementById("real-audience__money_yc");
+	const moneyWrap = document.getElementById("real-audience__money");
+	const nobleDom = document.getElementById("real-audience__noble");
+	const timeDom = document.getElementById("real-audience__time");
+	const watchDom = document.getElementById("real-audience__watchtime");
+	if (totalDom) totalDom.innerText = real_info.view;
+	if (totalWrap) totalWrap.title = "今日累计活跃人数:" + real_info.view + " 弹幕人数:" + real_info.danmu_person_count + " 送礼人数:" + real_info.gift_person_count + " 付费人数:" + real_info.paid_person_count;
+	if (barrageDom) barrageDom.innerText = real_info.danmu_person_count;
+	// document.getElementById("real-audience__gift").innerText = real_info.gift_person_count;
+	if (moneyYcDom) moneyYcDom.innerText = real_info.money_yc;
+	if (moneyWrap) moneyWrap.title = "总礼物价值:" + real_info.money_total + " 鱼翅礼物:" + real_info.money_yc;
+	if (real_info.noble_count !== "" && nobleDom) {
+		nobleDom.innerText = formatNobleCount(real_info.noble_count);
+	}
 	
-	if (todayWatchData.error == 0) {
-		document.getElementById("real-audience__watchtime").innerText = "已观看:" + formatSeconds(todayWatchData.data.todayWatch);
-		document.getElementById("real-audience__watchtime").title = "开播时间:" + String(dateFormat("yyyy年MM月dd日hh时mm分ss秒 ",new Date(Number(real_info.showtime + "000")))) + "\n已观看:" + formatSeconds(todayWatchData.data.todayWatch);
+	const todayWatch = todayWatchData && todayWatchData.data ? todayWatchData.data.todayWatch : 0;
+	if (timeDom) {
+		timeDom.innerText = "已播:" + formatSeconds(showedTime);
+		timeDom.title = "开播时间:" + String(dateFormat("yyyy年MM月dd日hh时mm分ss秒 ",new Date(Number(real_info.showtime + "000")))) + "\n已观看:" + formatSeconds(todayWatch);
+	}
+	
+	if (todayWatchData && todayWatchData.error == 0 && todayWatchData.data && watchDom) {
+		watchDom.innerText = "已观看:" + formatSeconds(todayWatch);
+		watchDom.title = "开播时间:" + String(dateFormat("yyyy年MM月dd日hh时mm分ss秒 ",new Date(Number(real_info.showtime + "000")))) + "\n已观看:" + formatSeconds(todayWatch);
 	}
 }
 
@@ -143,15 +170,20 @@ function setAvatarVideo() {
 	setAvatarVideo_Dom();
 	setAvatarYuba_Dom();
 	setAvatarVideo_Func(videoUrl, videoReplayUrl);
-	document.getElementsByClassName("Title-anchorPic-bottom")[0].style.display = "none";
-	document.getElementsByClassName("Title-anchorPic-bottom")[0].style.height = hasAvatarBottom ? "66px" : "22px";
-
-	document.getElementsByClassName("Title-anchorPicBack")[0].addEventListener("mouseenter", () => {
-		document.getElementsByClassName("Title-anchorPic-bottom")[0].style.display = "block";
-	});
-	document.getElementsByClassName("Title-anchorPicBack")[0].addEventListener("mouseleave", () => {
-		document.getElementsByClassName("Title-anchorPic-bottom")[0].style.display = "none";
-	});
+	const picBottom = document.getElementsByClassName("Title-anchorPic-bottom")[0];
+	const picBack = document.getElementsByClassName("Title-anchorPicBack")[0];
+	if (picBottom) {
+		picBottom.style.display = "none";
+		picBottom.style.height = hasAvatarBottom ? "66px" : "22px";
+	}
+	if (picBack && picBottom) {
+		picBack.addEventListener("mouseenter", () => {
+			picBottom.style.display = "block";
+		});
+		picBack.addEventListener("mouseleave", () => {
+			picBottom.style.display = "none";
+		});
+	}
 }
 
 function setAvatarVideo_Dom() {
@@ -165,6 +197,7 @@ function setAvatarVideo_Dom() {
 	<div id="Ex_VideoSubmit" class="Title-anchorPic-bottomItem"><span>投稿</span></div>
 	`
 	let b = document.getElementsByClassName("Title-anchorPic-bottom")[0] || document.getElementsByClassName("Title-anchorPicBack")[0];
+	if (!b) return;
 	b.insertBefore(a, b.childNodes[0]);
 }
 
@@ -177,23 +210,33 @@ function setAvatarYuba_Dom() {
 	<div id="Ex_EnterYuba" class="Title-anchorPic-bottomItem"><span>打开鱼吧</span></div>
 	`
 	let b = document.getElementsByClassName("Title-anchorPic-bottom")[0] || document.getElementsByClassName("Title-anchorPicBack")[0];
+	if (!b) return;
 	b.insertBefore(a, b.childNodes[0]);
 }
 
 function setAvatarVideo_Func(videoUrl, videoReplayUrl) {
-	document.getElementById("Ex_VideoSubmit").addEventListener("click", () => {
-		openPage(videoUrl, true);
-	})
+	const submitBtn = document.getElementById("Ex_VideoSubmit");
+	if (submitBtn) {
+		submitBtn.addEventListener("click", () => {
+			openPage(videoUrl, true);
+		});
+	}
 
-	document.getElementById("Ex_VideoReview").addEventListener("click", () => {
-		openPage(videoReplayUrl, true);
-	})
+	const reviewBtn = document.getElementById("Ex_VideoReview");
+	if (reviewBtn) {
+		reviewBtn.addEventListener("click", () => {
+			openPage(videoReplayUrl, true);
+		});
+	}
 
-	document.getElementById("Ex_EnterYuba").addEventListener("click", async () => {
-		const data = await getBindYuba(rid);
-		const url = data.data.group_url;
-		openPage(url, true);
-	})
+	const yubaBtn = document.getElementById("Ex_EnterYuba");
+	if (yubaBtn) {
+		yubaBtn.addEventListener("click", async () => {
+			const data = await getBindYuba(rid);
+			const url = data && data.data && data.data.group_url;
+			if (url) openPage(url, true);
+		});
+	}
 }
 
 function getBindYuba(rid) {
@@ -261,6 +304,7 @@ function initPkg_RealAudience_Handle(ret) {
 function switchRealAndTodayWatch() {
 	let realDom = document.getElementById("real-audience__time");
 	let watchDom = document.getElementById("real-audience__watchtime");
+	if (!realDom || !watchDom) return;
 	if (realDom.style.display == "none") {
 		realDom.style.display = "block";
 		watchDom.style.display = "none";

@@ -36,6 +36,7 @@ function BarrageLoop_insertModal() {
 	
 	a.innerHTML = html;
 	let b = document.getElementsByClassName("layout-Player-chat")[0];
+	if (!b) return;
 	b.insertBefore(a, b.childNodes[0]);
 }
 function BarrageLoop_insertIcon() {
@@ -44,6 +45,7 @@ function BarrageLoop_insertIcon() {
 	a.innerHTML = '<a class="ex-panel__icon" title="弹幕发送小助手"><svg t="1578572568198" style="display: block;" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="55445" width="32" height="32"><path d="M511.99883605 1020.07740302c-68.78771655 0-135.53209458-13.47788003-198.38074083-40.06106453-60.69004402-25.67037725-115.18953131-62.41203655-161.98371328-109.20738247-46.79418197-46.79301803-83.53700523-101.29366926-109.20621853-161.98371328C15.84497778 645.97776043 2.36709774 579.23105337 2.36709774 510.4445019s13.47904398-135.53209458 40.06106453-198.38074083c25.6692133-60.69004402 62.41203655-115.18953131 109.20621853-161.98371328 46.79534706-46.79418197 101.29366926-83.53700523 161.98371328-109.20621853 62.84864739-26.5831845 129.59418937-40.06106453 198.38074083-40.06106453 68.78771655 0 135.53209458 13.47904398 198.38190592 40.06106453 60.69004402 25.6692133 115.18953131 62.41203655 161.98487723 109.20621853 46.79301803 46.79418197 83.53584128 101.29366926 109.20621853 161.98371328 26.5831845 62.84864739 40.06106453 129.59418937 40.06106453 198.38074083s-13.47788003 135.53325853-40.06106453 198.38074084c-25.67037725 60.69004402-62.41203655 115.19069525-109.20621853 161.98371328-46.79534706 46.79418197-101.29483435 83.53817031-161.98487723 109.20738247C647.53092949 1006.59952413 580.78655147 1020.07740302 511.99883605 1020.07740302zM511.99883605 57.86089358c-249.55500203 0-452.58244437 203.02744235-452.58244437 452.58244437s203.02744235 452.58244437 452.58244437 452.58244438c249.55616597 0 452.58360832-203.02744235 452.58360832-452.58244438C964.58244437 260.88949987 761.55500203 57.86089358 511.99883605 57.86089358z" p-id="55446" fill="#1296db" data-spm-anchor-id="a313x.7781069.0.i24"></path><path d="M322.42598685 461.65355293l-8.51099648 74.46598314 97.86947811 0c-2.85950862 76.59314973-4.9866752 127.6556379-6.38266595 153.18746454-1.42975431 51.06132423-27.65899321 75.16339541-78.72148139 72.33881542-18.45058333 1.39598962-35.47024839 2.12716658-51.06248818 2.12716658-2.85950862-17.02082901-6.38266595-34.77283613-10.63816419-53.19081984 18.41681863 0 35.43764878 0 51.06248817 0 25.53066155 2.82574393 38.99456967-7.77981952 40.42432399-31.9133275 1.39598962-9.9069861 2.12833166-25.53182663 2.12833166-46.80698994 1.39598962-21.27632725 2.12716658-36.86740309 2.12716658-46.80698994l-99.9966447 0 14.89366244-172.33546126 89.3584805 0 0-78.72148138-102.12497636 0 0-48.9353216 151.05913287 0 0 176.5909595L322.42598685 461.65355293zM450.08162475 580.79819435l0-242.54594504 74.46598314 0c-17.0219941-24.10090723-31.91449145-43.25006791-44.67982222-57.44515413l46.80698994-21.27632725c4.25433429 4.25549824 10.63699911 12.06675342 19.14799673 23.40349497 15.5910747 18.45058333 24.79948459 30.51733789 27.65899321 36.16882574l-42.5514917 19.14799673 80.84864796 0c25.53066155-38.29715741 41.8203136-64.5263963 48.93415652-78.72031744l53.19081984 14.89366244c-5.68525255 8.50983253-15.62483939 22.70491762-29.78732487 42.55149169-7.11384291 9.93958685-12.06675342 17.02082901-14.89249849 21.27516331l70.20931982 0 0 242.54594503L620.28991829 580.7970304l0 51.06248818 144.67646806 0 0 48.93415651L620.28991829 680.79367509l0 87.23131392-51.06132423 0 0-87.23131392L428.80646144 680.79367509l0-48.93415651 140.42213376 0 0-51.06248818L450.08162475 580.7970304zM501.14411293 385.0604032l0 53.18965475 68.08331718 0 0-53.18965475L501.14411293 385.0604032zM501.14411293 480.80154965l0 55.31682248 68.08331718 0L569.22743011 480.80154965 501.14411293 480.80154965zM688.37323549 385.0604032l-68.0833172 0 0 53.18965475 68.0833172 0L688.37323549 385.0604032zM620.28991829 480.80154965l0 55.31682248 68.0833172 0L688.37323549 480.80154965 620.28991829 480.80154965z" p-id="55447" fill="#1296db"></path></svg><i id="bloop__tip" class="ex-panel__tip"></i></a>';
 	
 	let b = document.getElementsByClassName("ex-panel__wrap")[0];
+	if (!b) return;
 	b.insertBefore(a, b.childNodes[0]);
 }
 
@@ -83,7 +85,8 @@ function getBarrageColorArr() {
 	barrageColorLength = barrageColorLength - 1;
 	
 	if (isNoble == true) {
-		document.getElementsByClassName("NobleBarrageSwitcher")[0].click();
+		const nobleBtn = document.getElementsByClassName("NobleBarrageSwitcher")[0];
+		if (nobleBtn) nobleBtn.click();
 	}
 }
 
@@ -92,7 +95,9 @@ function getBarrageArr() {
 	// 获取即将发送的弹幕数组
 	barrageArr.length = 0;
 	barrageLength = 0;
-	let a = document.getElementById("bloop__textarea").value;
+	const textarea = document.getElementById("bloop__textarea");
+	if (!textarea) return;
+	let a = textarea.value;
 	barrageArr = a.split("\n");
 	barrageLength = barrageArr.length - 1;
 	
@@ -102,10 +107,12 @@ function selectBarrageColor(index) {
 	// 选择粉丝弹幕
 	let a;
 	if (isMatch == false) {
-		document.getElementsByClassName("FansBarrageSwitcher")[0].click();
+		const switcher = document.getElementsByClassName("FansBarrageSwitcher")[0];
+		if (switcher) switcher.click();
 		a = document.getElementsByClassName("FansBarrageColor-item")[index];
 	} else{
-		document.getElementsByClassName("MatchSystemFansBarrageSwitcher")[0].click();
+		const switcher = document.getElementsByClassName("MatchSystemFansBarrageSwitcher")[0];
+		if (switcher) switcher.click();
 		a = document.getElementsByClassName("MatchSystemFansBarrageColor-item")[index];
 	}
 	
@@ -113,15 +120,45 @@ function selectBarrageColor(index) {
 		a.click();
 	}
 }
+
+function getChatInputText(chatDom) {
+	if (!chatDom) return "";
+	if (chatDom.tagName === "TEXTAREA" || chatDom.tagName === "INPUT") {
+		return chatDom.value || "";
+	}
+	return chatDom.textContent || "";
+}
+
+function setChatInputText(chatDom, text) {
+	if (!chatDom) return;
+	const str = text == null ? "" : String(text);
+	if (chatDom.tagName === "TEXTAREA" || chatDom.tagName === "INPUT") {
+		const proto = chatDom.tagName === "TEXTAREA"
+			? window.HTMLTextAreaElement && window.HTMLTextAreaElement.prototype
+			: window.HTMLInputElement && window.HTMLInputElement.prototype;
+		const desc = proto && Object.getOwnPropertyDescriptor(proto, "value");
+		if (desc && typeof desc.set === "function") {
+			desc.set.call(chatDom, str);
+		} else {
+			chatDom.value = str;
+		}
+	} else {
+		chatDom.textContent = str;
+	}
+	try {
+		chatDom.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: true, inputType: "insertText", data: str }));
+	} catch (e) {
+		chatDom.dispatchEvent(new Event("input", { bubbles: true }));
+	}
+}
+
 function sendBarrage(text) {
 	// 发送弹幕
 	let chatDom = document.getElementsByClassName("ChatSend-txt")[0];
-	if (chatDom.tagName == "TEXTAREA") {
-		chatDom.value = text;
-	} else {
-		chatDom.innerText = text;
-	}
-	document.getElementsByClassName("ChatSend-button")[0].click();
+	let sendBtn = document.getElementsByClassName("ChatSend-button")[0];
+	if (!chatDom || !sendBtn) return;
+	setChatInputText(chatDom, text);
+	sendBtn.click();
 }
 
 function getSpeed() {
@@ -198,80 +235,103 @@ async function doLoopBarrage() {
 function initPkg_BarrageLoop_Func() {
 	// 函数初始化
 	// 将onclick事件绑定在这里
-	document.getElementsByClassName("bloop-icon")[0].addEventListener("click", function() {
-		showExRightPanel("弹幕发送小助手");
-	});
-	document.getElementById("bloop__checkbox_changeColor").addEventListener("click", function() {
-		isChangeColor = document.getElementById("bloop__checkbox_changeColor").checked;
-	});
-	document.getElementById("bloop__checkbox_startSend").addEventListener("click", function() {
-		let ischecked = document.getElementById("bloop__checkbox_startSend").checked;
-		if (ischecked == true) {
-			// 开始发送
-			getBarrageArr();
-			getBarrageColorArr();
-			if (document.getElementById("bloop__checkbox_random").checked == true) {
-				barrageOffset = Math.floor(Math.random() * barrageArr.length);
-				barrageColorOffset = Math.floor(Math.random() * barrageColorArr.length);
-			} else {
-				barrageOffset = 0;
-				barrageColorOffset = 0;
+	const bloopIcon = document.getElementsByClassName("bloop-icon")[0];
+	if (bloopIcon) {
+		bloopIcon.addEventListener("click", function() {
+			showExRightPanel("弹幕发送小助手");
+		});
+	}
+	const changeColorCheckbox = document.getElementById("bloop__checkbox_changeColor");
+	if (changeColorCheckbox) {
+		changeColorCheckbox.addEventListener("click", function() {
+			isChangeColor = changeColorCheckbox.checked;
+		});
+	}
+	const startSendCheckbox = document.getElementById("bloop__checkbox_startSend");
+	if (startSendCheckbox) {
+		startSendCheckbox.addEventListener("click", function() {
+			let ischecked = startSendCheckbox.checked;
+			if (ischecked == true) {
+				// 开始发送
+				getBarrageArr();
+				getBarrageColorArr();
+				const randomCheckbox = document.getElementById("bloop__checkbox_random");
+				if (randomCheckbox && randomCheckbox.checked == true) {
+					barrageOffset = Math.floor(Math.random() * barrageArr.length);
+					barrageColorOffset = Math.floor(Math.random() * barrageColorArr.length);
+				} else {
+					barrageOffset = 0;
+					barrageColorOffset = 0;
+				}
+				saveData_BarrageLoop();
+				bloopTimer = setTimeout(doLoopBarrage, getSpeed());
+				bloopStopTimer = setTimeout(() => {
+					startSendCheckbox.checked = false;
+					clearTimeout(bloopTimer);
+				}, getStopTime());
+			} else{
+				// 停止发送
+				clearTimeout(bloopTimer);
+				clearTimeout(bloopStopTimer);
+				// clearInterval(bloopTimer);
+			}
+		});
+	}
+
+	const tiangouCheckbox = document.getElementById("bloop__checkbox_tiangou");
+	if (tiangouCheckbox) {
+		tiangouCheckbox.addEventListener("click", function() {
+			let ischecked = tiangouCheckbox.checked;
+			const textarea = document.getElementById("bloop__textarea");
+			if (textarea) {
+				textarea.disabled = ischecked == true;
 			}
 			saveData_BarrageLoop();
-			bloopTimer = setTimeout(doLoopBarrage, getSpeed());
-			bloopStopTimer = setTimeout(() => {
-				document.getElementById("bloop__checkbox_startSend").checked = false;
-				clearTimeout(bloopTimer);
-			}, getStopTime());
-		} else{
-			// 停止发送
-			clearTimeout(bloopTimer);
-			clearTimeout(bloopStopTimer);
-			// clearInterval(bloopTimer);
-		}
-	});
+		});
+	}
 
-	document.getElementById("bloop__checkbox_tiangou").addEventListener("click", function() {
-		let ischecked = document.getElementById("bloop__checkbox_tiangou").checked;
-		if (ischecked == true) {
-			// 开启舔狗模式
-			document.getElementById("bloop__textarea").disabled = true;
-		} else{
-			// 关闭舔狗模式
-			document.getElementById("bloop__textarea").disabled = false;
-		}
-		saveData_BarrageLoop();
-	});
+	const selectDom = document.getElementById("bloop__select");
+	if (selectDom) {
+		selectDom.onclick = function() {
+			if (this.options.length == 0) {
+				return;
+			}
+			let area = document.getElementById("bloop__textarea");
+			if (!area) return;
+			let text = this.options[this.selectedIndex].text;
+			area.value = text;
+			area.value = area.value.replace(/\\r/g, "\r");
+		};
+	}
 
-  document.getElementById("bloop__select").onclick = function() {
-    if (this.options.length == 0) {
-      return;
-    }
-    let area = document.getElementById("bloop__textarea");
-    let text = this.options[this.selectedIndex].text;
-    area.value = text;
-    area.value = area.value.replace(/\\r/g, "\r");
-  };
+	const saveBtn = document.getElementById("bloop__save");
+	if (saveBtn) {
+		saveBtn.addEventListener("click", () => {
+			// ExSave_BarrageLoopOptions
+			let select_bloop = document.getElementById("bloop__select");
+			let area = document.getElementById("bloop__textarea");
+			if (!select_bloop || !area) return;
+			let text = area.value;
+			if (text == "") return;
+			barrageOptions.push(text);
+			select_bloop.options.add(new Option(text.replace(/\n/g, "\\r"), true));
+			saveData_BarrageLoop();
+		});
+	}
 
-	document.getElementById("bloop__save").addEventListener("click", () => {
-		// ExSave_BarrageLoopOptions
-    let select_bloop = document.getElementById("bloop__select");
-    let text = document.getElementById("bloop__textarea").value;
-    if (text == "") return;
-    barrageOptions.push(text);
-    select_bloop.options.add(new Option(text.replace(/\n/g, "\\r"), true));
-    saveData_BarrageLoop();
-	});
-
-	document.getElementById("bloop__delete").addEventListener("click", () => {
-		let select_bloop = document.getElementById("bloop__select");
-    let index = select_bloop.options[select_bloop.selectedIndex];
-    if (!index) return;
-    let text = index.text;
-    barrageOptions = barrageOptions.filter(item => item === text);
-    select_bloop.options.remove(select_bloop.selectedIndex);
-    saveData_BarrageLoop();
-	});
+	const deleteBtn = document.getElementById("bloop__delete");
+	if (deleteBtn) {
+		deleteBtn.addEventListener("click", () => {
+			let select_bloop = document.getElementById("bloop__select");
+			if (!select_bloop) return;
+			let index = select_bloop.options[select_bloop.selectedIndex];
+			if (!index) return;
+			let text = index.text;
+			barrageOptions = barrageOptions.filter(item => item === text);
+			select_bloop.options.remove(select_bloop.selectedIndex);
+			saveData_BarrageLoop();
+		});
+	}
 }
 
 
@@ -286,7 +346,13 @@ function initPkg_BarrageLoop_Set() {
 	let ret = localStorage.getItem("ExSave_BarrageLoopOptions");
 	
 	if (ret != null) {
-		let retJson = JSON.parse(ret);
+		let retJson;
+		try {
+			retJson = JSON.parse(ret);
+		} catch (e) {
+			return;
+		}
+		if (!retJson) return;
 		if ("speed1" in retJson == false) {
 			retJson.speed1 = 2000;
 		}
@@ -299,19 +365,27 @@ function initPkg_BarrageLoop_Set() {
 		if ("isTiangouMode" in retJson == false) {
 			retJson.isTiangouMode = false;
 		}
-    let select_bloop = document.getElementById("bloop__select");
-    retJson.text.forEach(item => {
-      select_bloop.options.add(new Option(item.replace(/\r/g, "\\r"), ""));
-    });
-    barrageOptions = retJson.text;
-		document.getElementById("bloop__checkbox_changeColor").checked = retJson.isChangeColor;
+		let select_bloop = document.getElementById("bloop__select");
+		if (select_bloop && Array.isArray(retJson.text)) {
+			retJson.text.forEach(item => {
+				select_bloop.options.add(new Option(item.replace(/\r/g, "\\r"), ""));
+			});
+			barrageOptions = retJson.text;
+		}
+		const changeColorCheckbox = document.getElementById("bloop__checkbox_changeColor");
+		if (changeColorCheckbox) changeColorCheckbox.checked = retJson.isChangeColor;
 		isChangeColor = Boolean(retJson.isChangeColor);
-		document.getElementById("bloop__text_speed1").value = retJson.speed1;
-		document.getElementById("bloop__text_speed2").value = retJson.speed2;
-		document.getElementById("bloop__text_stoptime").value = retJson.stopTime;
+		const speed1Input = document.getElementById("bloop__text_speed1");
+		if (speed1Input) speed1Input.value = retJson.speed1;
+		const speed2Input = document.getElementById("bloop__text_speed2");
+		if (speed2Input) speed2Input.value = retJson.speed2;
+		const stopTimeInput = document.getElementById("bloop__text_stoptime");
+		if (stopTimeInput) stopTimeInput.value = retJson.stopTime;
 		if (retJson.isTiangouMode == true) {
-			document.getElementById("bloop__checkbox_tiangou").checked = retJson.isTiangouMode;
-			document.getElementById("bloop__textarea").disabled = true;
+			const tiangouCheckbox = document.getElementById("bloop__checkbox_tiangou");
+			if (tiangouCheckbox) tiangouCheckbox.checked = retJson.isTiangouMode;
+			const textarea = document.getElementById("bloop__textarea");
+			if (textarea) textarea.disabled = true;
 		}
 	}
 }
