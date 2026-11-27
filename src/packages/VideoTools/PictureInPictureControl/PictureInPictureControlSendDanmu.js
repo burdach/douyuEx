@@ -44,9 +44,21 @@ function PictureInPictureControl_bindSendEvents(pipWindow, danmakuLayer) {
 
 // 发送弹幕
 async function PictureInPictureControl_SendDanmaku(text) {
-    let textarea = document.querySelector("div.ChatSend-txt");
+    const input = document.querySelector(".ChatSend-txt");
     const button = document.querySelector(".ChatSend-button");
-    textarea.innerText = text;
+    if (!input || !button) {
+        return false;
+    }
+    if (input.tagName === "TEXTAREA" || input.tagName === "INPUT") {
+        input.value = text;
+    } else {
+        input.textContent = text;
+    }
+    try {
+        input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
+    } catch (e) {
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
     button.click();
     return true;
 }

@@ -80,3 +80,10 @@
 .live-next-body .layout-Player-chat>* {
 	bottom: 0 !important;
 }
+
+/* 避免 Live-Next 礼物栏子容器裁剪非浮动状态的 ExPanel */
+.InteractABAd-aside:has(> .ex-panel),
+.PlayerToolbar-ContentRow:has(> .ex-panel),
+.ToolbarGiftArea-container:has(> .ex-panel) {
+	overflow: visible !important;
+}

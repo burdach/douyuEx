@@ -135,9 +135,14 @@ function PictureInPictureControl_cleanupEnhancedPip(pipWindow, pipVideo) {
     }
 }
 
+function PictureInPictureControl_getSourceVideo() {
+    return document.getElementById("__video2")
+        || document.querySelector(".layout-Player-videoEntity video, #__video_container video");
+}
+
 function PictureInPictureControl_returnToOpener(pipWindow, exitPip = true) {
     const win = pipWindow || window.__pip_window__;
-    const sourceVideo = win?.__pip_source_video__ || document.getElementById("__video2");
+    const sourceVideo = win?.__pip_source_video__ || PictureInPictureControl_getSourceVideo();
 
     if (exitPip && window.__pip_is_active__) {
         const pipVideo = win?.document?.getElementById("pip-video");
@@ -258,7 +263,7 @@ async function PictureInPictureControl_wakeSourceVideo(video) {
 }
 
 async function PictureInPictureControl_reloadPipVideo(pipWindow, pipVideo) {
-    const sourceVideo = pipWindow?.__pip_source_video__ || document.getElementById("__video2");
+    const sourceVideo = pipWindow?.__pip_source_video__ || PictureInPictureControl_getSourceVideo();
     if (!sourceVideo || !pipVideo) {
         return false;
     }
@@ -815,7 +820,7 @@ function PictureInPictureControl_launchNative() {
         btn.click();
         return;
     }
-    const video = document.getElementById("__video2") || document.querySelector(".layout-Player-videoEntity video");
+    const video = PictureInPictureControl_getSourceVideo();
     if (video && typeof video.requestPictureInPicture === "function") {
         video.requestPictureInPicture().catch(() => {
             showMessage("【画中画】无法开启原版画中画", "error");
@@ -826,7 +831,7 @@ function PictureInPictureControl_launchNative() {
 }
 
 function PictureInPictureControl_launchEnhanced() {
-    const video = document.getElementById("__video2");
+    const video = PictureInPictureControl_getSourceVideo();
     if (!video) {
         showMessage("【画中画增强】当前直播间不支持画中画增强功能", "error");
         return;
@@ -849,7 +854,7 @@ function PictureInPictureControl_launchEnhanced() {
 }
 
 function PictureInPictureControl_toggleMainVideoVisibility(hide) {
-    const mainVideo = document.getElementById('__video2');
+    const mainVideo = PictureInPictureControl_getSourceVideo();
     if (!mainVideo) return;
     
     if (hide) {
@@ -933,7 +938,8 @@ function PictureInPictureControl_closePipWebSocket() {
 }
 
 async function PictureInPictureControl_handle() {
-    const video = document.getElementById('__video2');
+    const video = PictureInPictureControl_getSourceVideo();
+    if (!video) return;
 
     PictureInPictureControl_closePipWebSocket();
     PictureInPictureControl_clearWsDedup();

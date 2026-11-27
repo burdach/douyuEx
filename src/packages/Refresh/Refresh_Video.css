@@ -57,3 +57,71 @@
 .top-0-important {
     top: 0 !important;
 }
+
+/* ExPanel 隐藏礼物栏快捷按钮状态 */
+#ex-panel-hide-giftbar.is-active .ex-panel__icon svg path,
+#ex-panel-hide-giftbar.is-active .ex-panel__icon svg rect {
+    stroke: #ff6600;
+}
+
+/* 隐藏礼物栏 - Live-Next 布局 */
+body.live-next-body.ex-hide-gift-bar .interactive__8Ht4-,
+body.live-next-body.ex-hide-gift-bar #js-player-main [class*="interactive__"],
+body.live-next-body.ex-hide-gift-bar #js-player-toolbar,
+body.live-next-body.ex-hide-gift-bar .PlayerToolbar,
+body.live-next-body.ex-hide-gift-bar .PlayerToolbar-ContentRow,
+body.live-next-body.ex-hide-gift-bar .case__f4yex,
+body.live-next-body.ex-hide-gift-bar #js-player-main [class*="case__"] {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+body.live-next-body.ex-hide-gift-bar:not(.is-fullScreen):not(.is-fullScreenPage) .stream__T55I3,
+body.live-next-body.ex-hide-gift-bar:not(.is-fullScreen):not(.is-fullScreenPage) #js-player-main [class*="stream__"] {
+    bottom: 0 !important;
+    flex: 1 1 auto !important;
+}
+
+body.live-next-body.ex-hide-gift-bar.is-fullScreenPage .stream__T55I3,
+body.live-next-body.ex-hide-gift-bar.is-fullScreenPage .video__VfhVg,
+body.live-next-body.ex-hide-gift-bar.is-fullScreenPage #js-player-main [class*="stream__"],
+body.live-next-body.ex-hide-gift-bar.is-fullScreenPage #js-player-main [class*="video__"],
+body.live-next-body.ex-hide-gift-bar.is-fullScreen .stream__T55I3,
+body.live-next-body.ex-hide-gift-bar.is-fullScreen .video__VfhVg,
+body.live-next-body.ex-hide-gift-bar.is-fullScreen #js-player-main [class*="stream__"],
+body.live-next-body.ex-hide-gift-bar.is-fullScreen #js-player-main [class*="video__"] {
+    bottom: 0 !important;
+    height: 100% !important;
+}
+
+/* 隐藏礼物栏 - 经典布局 */
+body:not(.live-next-body).ex-hide-gift-bar .PlayerToolbar-ContentRow {
+    visibility: hidden !important;
+}
+
+body:not(.live-next-body).ex-hide-gift-bar .layout-Player-video {
+    bottom: 0 !important;
+    z-index: 25 !important;
+}
+
+body:not(.live-next-body).ex-hide-gift-bar #js-player-toolbar {
+    z-index: 20 !important;
+}
+
+/* 隐藏礼物栏同步清理视频区活动/PK浮层 */
+body.ex-hide-gift-bar .PELact,
+body.ex-hide-gift-bar .pushTower-wrapper-gf1HG,
+body.ex-hide-gift-bar [class*="pushTower-wrapper-"],
+body.ex-hide-gift-bar .PkView-9f6a2c,
+body.ex-hide-gift-bar [class*="PkView-"],
+body.ex-hide-gift-bar .MorePk,
+body.ex-hide-gift-bar .RandomPKBar,
+body.ex-hide-gift-bar .LiveRoomLoopVideo,
+body.ex-hide-gift-bar .LiveRoomDianzan,
+body.ex-hide-gift-bar .maiMaitView-68e80c,
+body.ex-hide-gift-bar [class*="maiMaitView-"],
+body.ex-hide-gift-bar .PkView {
+    display: none !important;
+}

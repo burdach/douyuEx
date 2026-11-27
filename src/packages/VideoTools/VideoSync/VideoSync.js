@@ -7,6 +7,9 @@ function initPkg_VideoTools_VideoSync_Dom() {
     VideoSync_insertIcon();
 }
 function VideoSync_insertIcon() {
+    if (document.getElementById("ex-videosync")) {
+        return;
+    }
 	let a = document.createElement("div");
     a.id = "ex-videosync";
     a.title = "同步时间";
@@ -16,25 +19,31 @@ function VideoSync_insertIcon() {
     let b = document.getElementsByClassName("left-d3671e")[0];
     if (b) {
         a.style.marginLeft = "20px";
-        b.insertBefore(a, b.childNodes[3]);
+        b.insertBefore(a, b.childNodes[3] || null);
     } else {
         a.style.marginLeft = "8px";
-        b = getValidDom([".left-bfab3b"]);
-        b.insertBefore(a, b.childNodes[2]);
+        b = getValidDom([".left-bfab3b", '#js-player-controlbar [class*="left-"]']);
+        if (b) {
+            b.insertBefore(a, b.childNodes[2] || null);
+        }
     }
 }
 
 function initPkg_VideoTools_VideoSync_Func() {
-    document.getElementById("ex-videosync").addEventListener("click", () => {
+    const syncBtn = document.getElementById("ex-videosync");
+    if (!syncBtn) return;
+    syncBtn.addEventListener("click", () => {
         setVideoSync();
-    })
+    });
 }
 
 function setVideoSync() {
-    let buffered = liveVideoNode.buffered;
-        if (buffered.length == 0) {
-            // 暂停中
-            return;
-        }
-    liveVideoNode.currentTime = buffered.end(0);
+    const video = VideoTools_getVideoNode();
+    if (!video || !video.buffered) return;
+    let buffered = video.buffered;
+    if (buffered.length == 0) {
+        // 暂停中
+        return;
+    }
+    video.currentTime = buffered.end(0);
 }

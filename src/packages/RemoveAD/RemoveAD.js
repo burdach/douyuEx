@@ -1,18 +1,24 @@
 function initPkg_RemoveAD() {
+    let count = 0;
     let t = setInterval(() => {
-        let a = getValidDom([".PlayerToolbar-ContentCell .PlayerToolbar-Wealth", "#js-backpack-enter"]);
+        count++;
+        let a = getValidDom([".PlayerToolbar-ContentCell .PlayerToolbar-Wealth", "#js-backpack-enter", "#js-barrage-list"]);
         if (a != undefined) {
             clearInterval(t);
             optimizePageStyle();
 
             initPkg_RemoveMsgNotice();
+            return;
+        }
+        if (count >= 30) {
+            clearInterval(t);
         }
     }, 1000);
 }
 // .dy-ModalRadius-mask,dy-ModalRadius-wrap{display:none !important;}
 function removeAD() {
     StyleHook_set("Ex_Style_RemoveAD", `
-    .ScreenBannerAd,.XinghaiAd,.CustomGroupGuide,.FudaiGiftToolBarTips,.UserInfo-tryEnterHiddenLead,.BargainingKit,.AnchorPocketTips,.FishShopTip,.FollowGuide,#js-bottom-right-cloudGame,.CloudGameLink,.RoomText-icon-horn,.RoomText-list,.Search-ad,.RedEnvelopAd,.noHandlerAd-0566b9,.PcDiversion,.DropMenuList-ad,.DropPane-ad,.WXTipsBox,.igl_bg-b0724a,.closure-ab91fb,.VideoAboveVivoAd,.css-widgetWrapper-EdVVC,.watermark-442a18,.FollowGuide-FadeOut,.MatchSystemChatRoomEntry-roomTabs,.FansMedalDialog-normal,.GameLauncher,.recommendAD-54569e,.recommendApp-0e23eb,.Title-ad,.Bottom-ad,.SignBarrage,.corner-ad-495ade,.SignBaseComponent-sign-ad,.SuperFansBubble,.is-noLogin,.PlayerToolbar-signCont,#js-widget,.Frawdroom,.HeaderGif-right,.HeaderGif-left,.liveos-workspace{display:none !important;}
+    .ScreenBannerAd,.XinghaiAd,.CustomGroupGuide,.FudaiGiftToolBarTips,.UserInfo-tryEnterHiddenLead,.BargainingKit,.AnchorPocketTips,.FishShopTip,.FollowGuide,#js-bottom-right-cloudGame,.CloudGameLink,.RoomText-icon-horn,.RoomText-list,.Search-ad,.RedEnvelopAd,.noHandlerAd-0566b9,.PcDiversion,.DropMenuList-ad,.DropPane-ad,.WXTipsBox,.igl_bg-b0724a,.closure-ab91fb,.VideoAboveVivoAd,.css-widgetWrapper-EdVVC,.watermark-442a18,[class*="watermark-"],.FollowGuide-FadeOut,.MatchSystemChatRoomEntry-roomTabs,.FansMedalDialog-normal,.GameLauncher,.recommendAD-54569e,[class*="recommendAD-"],.recommendApp-0e23eb,[class*="recommendApp-"],.Title-ad,.Bottom-ad,.SignBarrage,.corner-ad-495ade,[class*="corner-ad-"],.SignBaseComponent-sign-ad,.SuperFansBubble,.is-noLogin,.PlayerToolbar-signCont,#js-widget,.Frawdroom,.HeaderGif-right,.HeaderGif-left,.liveos-workspace{display:none !important;}
     .Barrage-topFloater{z-index:999}
     .danmuAuthor-3d7b4a, .danmuContent-25f266{overflow: initial}
     .BattleShipTips{display:none !important;}
@@ -59,23 +65,21 @@ function removeAD() {
         display: none!important;
     }
     /*直播间顶部广告*/
-    .room-top-banner-box {
+    .room-top-banner-box,
+    #js-room-top-banner {
         display: none!important;
-    }
-    /*弹幕框底部进场弹幕信息*/
-    #js-barrage-extend-container {
-        display: none!important;
-        display: var(--enter-display, none) !important;
     }
     /*直播间右侧广告*/
-    .LadderNav {
+    .LadderNav,
+    #js-layout-fixed-right {
         display: none!important;
     }
     #js-bottom-right-recommendAd {
         display: none!important;
     }
     /*弹幕框顶部广告*/
-    .aside-top-uspension-box {
+    .aside-top-uspension-box,
+    #js-player-asideTopSuspension {
         display: none!important;
     }
     #js-player-asideMain {
@@ -85,20 +89,20 @@ function removeAD() {
     .bacpCommonKeFu {
         display: none!important;
     }
-
-    .werbungContainer__2sv7h{display:none !important;}
-    #js-player-asideTopSuspension{display:none !important;}
-    .Search-Panel-Advert{display:none !important;}
+    /*Live-Next 底部推广文案与广告容器（保留 #js-player-interactive-panel 容器避免误伤用户交互弹窗）*/
+    .InteractABAd-signText,
+    .werbungContainer__2sv7h,
+    [class*="werbungContainer__"],
+    .Search-Panel-Advert {
+        display: none!important;
+    }
     `);
-    // body{transform: translateZ(0)!important;}
-    // .RomanticDatePanelModal-middle--small{height:220px !important;}
-    // .MainDialog-main--content{height:450px !important;}
-    // .RomanticDatePanelModal-middle--rowItemBottom--rowItemBottomBtn{margin-left:0px !important;margin-top:0px !important;width:170px !important;height:40px !important;background:orange !important;}
-    // }
 }
 
 function optimizePageStyle() {
     // 弹幕框滚动条隐藏
-    let dom_barrage = document.getElementById("js-barrage-list").parentNode;
-    dom_barrage.id = "js-barrage-list-parent";
+    let dom_list = document.getElementById("js-barrage-list");
+    if (dom_list && dom_list.parentNode) {
+        dom_list.parentNode.id = "js-barrage-list-parent";
+    }
 }

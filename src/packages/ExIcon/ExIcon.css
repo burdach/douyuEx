@@ -2,6 +2,7 @@
 	display: inline-block;
 	vertical-align: middle;
 	margin-right: 8px;
+	cursor: pointer;
 
 	-moz-user-select:none; /*火狐*/
     -webkit-user-select:none; /*webkit浏览器*/
@@ -11,6 +12,7 @@
 }
 
 .ex-icon a {
+    position: relative;
     display: flex;
     justify-items: center;
     align-items: center;
@@ -18,4 +20,28 @@
 
 .ex-icon svg:hover {
     transform: scale(1.1);
+}
+
+/* Live-Next 20px 高度 .InteractABAd-aside 紧凑适配 */
+.ex-icon.ex-icon--compact,
+.InteractABAd-aside .ex-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 20px;
+    line-height: 20px;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.ex-icon.ex-icon--compact a,
+.InteractABAd-aside .ex-icon a {
+    height: 20px;
+}
+
+.ex-icon.ex-icon--compact svg,
+.InteractABAd-aside .ex-icon svg {
+    width: 18px;
+    height: 18px;
+    display: block;
 }

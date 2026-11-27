@@ -1,7 +1,18 @@
+function VolumeMouseScrolling_getVolumeElement() {
+    return getValidDom(['#js-player-controlbar [class*="volume-"]', ".volume-07c230"]);
+}
+
+function VolumeMouseScrolling_getVideo() {
+    return document.getElementById("__video2")
+        || document.querySelector(".layout-Player-videoEntity video, #__video_container video");
+}
+
 function initPkg_VolumeMouseScrolling() {
+    let attempts = 0;
     const volumeCheckInterval = setInterval(() => {
-        const volumeElement = document.querySelector(".volume-07c230");
-        const video = document.getElementById("__video2");
+        attempts++;
+        const volumeElement = VolumeMouseScrolling_getVolumeElement();
+        const video = VolumeMouseScrolling_getVideo();
 
         if (volumeElement && video) {
             clearInterval(volumeCheckInterval);
@@ -19,16 +30,21 @@ function initPkg_VolumeMouseScrolling() {
             });
 
             VolumeMouseScrolling_SyncVolumeUI(video.volume);
+            return;
+        }
+        if (attempts >= 60) {
+            clearInterval(volumeCheckInterval);
         }
     }, 500);
 }
 
 function VolumeMouseScrolling_SyncVolumeUI(volume) {
     try {
-        const volumeElement = document.querySelector(".volume-07c230");
-        const volume_front = document.querySelector(".volume-bar-93f0b0 .front-99e2aa");
-        const volume_point = document.querySelector(".volume-bar-93f0b0 .point-6ef744");
-        const volume_tips_text = document.querySelector(".volume-bar-93f0b0 .tips2-9bb064");
+        const volumeElement = VolumeMouseScrolling_getVolumeElement();
+        const volumeBar = document.querySelector('#js-player-controlbar [class*="volume-bar-"], .volume-bar-93f0b0');
+        const volume_front = volumeBar ? volumeBar.querySelector('[class*="front-"], .front-99e2aa') : null;
+        const volume_point = volumeBar ? volumeBar.querySelector('[class*="point-"], .point-6ef744') : null;
+        const volume_tips_text = volumeBar ? volumeBar.querySelector('[class*="tips2-"], .tips2-9bb064') : null;
 
         if (volume_front) volume_front.style.height = `${volume * 100}px`;
         if (volume_point) volume_point.style.bottom = `${volume * 100 + 7}px`;
@@ -47,7 +63,7 @@ function VolumeMouseScrolling_SyncVolumeUI(volume) {
 }
 
 function VolumeMouseScrolling_Handler(volume) {
-    const video = document.getElementById("__video2");
+    const video = VolumeMouseScrolling_getVideo();
     if (!video) return;
 
     video.muted = (volume === 0);

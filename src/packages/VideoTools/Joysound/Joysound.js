@@ -49,7 +49,7 @@ function initPkg_VideoTools_Joysound_Func() {
             }
             Joysound_updateMenuUI();
         } else {
-            openPage("https://src.douyuex.com/src/joysound.user.js");
+            showMessage("Joysound 音效扩展服务已下线，该功能暂不可用", "warning");
         }
     });
 }

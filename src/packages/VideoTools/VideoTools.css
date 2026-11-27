@@ -1,3 +1,5 @@
-.menu-da2a9e {
+.menu-da2a9e,
+#__video_container ul[class*="menu-"],
+#__h5player ul[class*="menu-"] {
   z-index: 999 !important;
 }

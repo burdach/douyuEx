@@ -8,14 +8,18 @@ function initPkg_VideoTools_VideoToolbarMenu() {
 }
 
 function VideoToolbarMenu_insertDom() {
+    if (document.getElementById("ex-vtoolbar-menu")) {
+        return;
+    }
+    const ver = typeof curVersion !== "undefined" ? curVersion : "";
     const root = document.createElement("div");
     root.id = "ex-vtoolbar-menu";
     root.className = "vtoolbar-menu";
     root.innerHTML = `
-        <button type="button" class="vtoolbar-menu__trigger" title="DouyuEx Ver${curVersion}" aria-expanded="false" aria-haspopup="true">
+        <button type="button" class="vtoolbar-menu__trigger" title="DouyuEx Ver${ver}" aria-expanded="false" aria-haspopup="true">
             ${VideoToolbarMenu_pokeballSvg}
         </button>
-        <div class="vtoolbar-menu__dropdown" role="menu" aria-label="DouyuEx Ver${curVersion}">
+        <div class="vtoolbar-menu__dropdown" role="menu" aria-label="DouyuEx Ver${ver}">
             <button type="button" class="vtoolbar-menu__item" id="vtoolbar-menu-joysound" role="menuitem">
                 <span class="vtoolbar-menu__item-icon" id="vtoolbar-joysound-icon"></span>
                 <span class="vtoolbar-menu__item-label">Joysound 音效</span>
@@ -40,6 +44,13 @@ function VideoToolbarMenu_insertDom() {
                 <span class="vtoolbar-menu__item-icon">${VideoToolbarMenu_iconEnhancedPip}</span>
                 <span class="vtoolbar-menu__item-label">加强版画中画</span>
             </button>
+            <button type="button" class="vtoolbar-menu__item" id="vtoolbar-menu-hide-giftbar" role="menuitem">
+                <span class="vtoolbar-menu__item-icon">${VideoToolbarMenu_iconGiftBar}</span>
+                <span class="vtoolbar-menu__item-label">隐藏礼物栏</span>
+                <span class="vtoolbar-menu__switch" id="vtoolbar-hide-giftbar-switch" aria-hidden="true">
+                    <span class="vtoolbar-menu__switch-thumb"></span>
+                </span>
+            </button>
             <div class="vtoolbar-menu__divider" role="separator"></div>
             <button type="button" class="vtoolbar-menu__item" id="vtoolbar-menu-expanel" role="menuitem">
                 <span class="vtoolbar-menu__item-icon">${VideoToolbarMenu_pokeballSvg}</span>
@@ -48,9 +59,21 @@ function VideoToolbarMenu_insertDom() {
         </div>
         <div class="vtoolbar-menu__filter-host" id="ex-vtoolbar-filter-host"></div>
     `;
-    const toolbar = getValidDom([".right-e7ea5d", ".right-17e251"]);
+    const toolbar = getValidDom([".right-17e251", ".right-e7ea5d", '#js-player-controlbar [class*="right-"]']);
     if (toolbar) {
-        toolbar.insertBefore(root, toolbar.childNodes[0]);
+        toolbar.insertBefore(root, toolbar.childNodes[0] || null);
+    }
+}
+
+function VideoToolbarMenu_syncHideGiftBarUI(isHidden) {
+    const switchEl = document.getElementById("vtoolbar-hide-giftbar-switch");
+    if (!switchEl) {
+        return;
+    }
+    if (isHidden) {
+        switchEl.classList.add("is-on");
+    } else {
+        switchEl.classList.remove("is-on");
     }
 }
 
@@ -107,6 +130,9 @@ function VideoToolbarMenu_bindHoverTarget(el, isTrigger) {
 
 function VideoToolbarMenu_bindEvents() {
     const root = VideoToolbarMenu_getRoot();
+    if (!root) {
+        return;
+    }
     const trigger = root.querySelector(".vtoolbar-menu__trigger");
     const dropdown = root.querySelector(".vtoolbar-menu__dropdown");
     const filterHost = document.getElementById("ex-vtoolbar-filter-host");
@@ -114,45 +140,68 @@ function VideoToolbarMenu_bindEvents() {
     const copyLiveBtn = document.getElementById("vtoolbar-menu-copy-live");
     const audioLineBtn = document.getElementById("vtoolbar-menu-audio-line");
     const enhancedPipBtn = document.getElementById("vtoolbar-menu-enhanced-pip");
+    const hideGiftBarBtn = document.getElementById("vtoolbar-menu-hide-giftbar");
     const expanelBtn = document.getElementById("vtoolbar-menu-expanel");
 
     VideoToolbarMenu_bindHoverTarget(trigger, true);
     VideoToolbarMenu_bindHoverTarget(dropdown, false);
     VideoToolbarMenu_bindHoverTarget(filterHost, false);
 
-    filterBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        VideoToolbarMenu_toggleFilterPanel();
-    });
+    if (filterBtn) {
+        filterBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            VideoToolbarMenu_toggleFilterPanel();
+        });
+    }
 
-    copyLiveBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (typeof CopyRealLive_copySelected === "function") {
-            CopyRealLive_copySelected();
-        }
-    });
+    if (copyLiveBtn) {
+        copyLiveBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (typeof CopyRealLive_copySelected === "function") {
+                CopyRealLive_copySelected();
+            }
+        });
+    }
 
-    audioLineBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (typeof AudioLine_switch === "function") {
-            AudioLine_switch();
-        }
-    });
+    if (audioLineBtn) {
+        audioLineBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (typeof AudioLine_switch === "function") {
+                AudioLine_switch();
+            }
+        });
+    }
 
-    enhancedPipBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        VideoToolbarMenu_close();
-        if (typeof PictureInPictureControl_launchEnhanced === "function") {
-            PictureInPictureControl_launchEnhanced();
-        }
-    });
+    if (enhancedPipBtn) {
+        enhancedPipBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            VideoToolbarMenu_close();
+            if (typeof PictureInPictureControl_launchEnhanced === "function") {
+                PictureInPictureControl_launchEnhanced();
+            }
+        });
+    }
 
-    expanelBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (typeof showExPanel === "function") {
-            showExPanel();
+    if (hideGiftBarBtn) {
+        hideGiftBarBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (typeof toggleRefreshVideo === "function") {
+                toggleRefreshVideo();
+            }
+        });
+        if (typeof refresh_Video_getStatus === "function") {
+            VideoToolbarMenu_syncHideGiftBarUI(refresh_Video_getStatus());
         }
-    });
+    }
+
+    if (expanelBtn) {
+        expanelBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (typeof showExPanel === "function") {
+                showExPanel();
+            }
+        });
+    }
 
     document.addEventListener("keydown", VideoToolbarMenu_onKeydown);
 }
@@ -172,7 +221,9 @@ function VideoToolbarMenu_open() {
     VideoToolbarMenu_isOpen = true;
     root.classList.add("is-open");
     const trigger = root.querySelector(".vtoolbar-menu__trigger");
-    trigger.setAttribute("aria-expanded", "true");
+    if (trigger) {
+        trigger.setAttribute("aria-expanded", "true");
+    }
 }
 
 function VideoToolbarMenu_close() {
@@ -184,7 +235,9 @@ function VideoToolbarMenu_close() {
     VideoToolbarMenu_isOpen = false;
     root.classList.remove("is-open");
     const trigger = root.querySelector(".vtoolbar-menu__trigger");
-    trigger.setAttribute("aria-expanded", "false");
+    if (trigger) {
+        trigger.setAttribute("aria-expanded", "false");
+    }
     VideoToolbarMenu_hideFilterPanel();
 }
 

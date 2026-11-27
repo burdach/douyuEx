@@ -10,16 +10,20 @@ function initPkg_Refresh_Barrage_Dom() {
 	Refresh_Barrage_insertIcon();
 }
 function Refresh_Barrage_insertIcon() {
+    if (document.getElementById("refresh-barrage")) return;
+	let b = document.getElementsByClassName("Barrage-toolbar")[0];
+	if (!b) return;
 	let a = document.createElement("a");
     a.className = "refresh-barrage";
     a.id = "refresh-barrage";
 	a.innerHTML = '<svg t="1588051109604" id="refresh-barrage__svg" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3095" width="16" height="16"><path d="M588.416 516.096L787.2 317.312a54.016 54.016 0 1 0-76.416-76.416L512 439.68 313.216 241.024A54.016 54.016 0 1 0 236.8 317.376l198.784 198.848-198.016 197.888a54.016 54.016 0 1 0 76.416 76.416L512 592.576l197.888 197.952a54.016 54.016 0 1 0 76.416-76.416L588.416 516.096z" fill="#AFAFAF" p-id="3096"></path></svg><i class="Barrage-toolbarIcon"></i><span id="refresh-barrage__text" class="Barrage-toolbarText">前缀</span>';
-	let b = document.getElementsByClassName("Barrage-toolbar")[0];
-	b.insertBefore(a, b.childNodes[0]);
+	b.insertBefore(a, b.childNodes[0] || null);
 }
 
 function initPkg_Refresh_Barrage_Func() {
-	document.getElementById("refresh-barrage").addEventListener("click", function() {
+    const btn = document.getElementById("refresh-barrage");
+    if (!btn) return;
+	btn.addEventListener("click", function() {
         if (current_barrage_status == 0) {
             PostbirdAlertBox.confirm({
                 'title': '提示',
@@ -54,13 +58,15 @@ function refresh_Barrage_getStatus() {
 function initPkg_Refresh_Barrage_Set() {
     let ret = localStorage.getItem("ExSave_Refresh");
     if (ret != null) {
-        let retJson = JSON.parse(ret);
-        if ("barrage" in retJson == false) {
-            retJson.barrage = {status: false};
-        }
-        if (retJson.barrage.status == true) {
-            setRefreshBarrage();
-        }
+        try {
+            let retJson = JSON.parse(ret);
+            if ("barrage" in retJson == false) {
+                retJson.barrage = {status: false};
+            }
+            if (retJson.barrage.status == true) {
+                setRefreshBarrage();
+            }
+        } catch (e) {}
     }
 }
  
@@ -73,9 +79,13 @@ function setRefreshBarrage() {
     `;
     StyleHook_set("Ex_Style_RefreshBarrage", cssText);
     current_barrage_status = 1;
-    document.getElementById("refresh-barrage").classList.add("ex-active");
-    document.getElementById("refresh-barrage__text").style.color = "#fff";
-    document.getElementById("refresh-barrage__text").innerText = "前缀";
+    const btn = document.getElementById("refresh-barrage");
+    const txt = document.getElementById("refresh-barrage__text");
+    if (btn) btn.classList.add("ex-active");
+    if (txt) {
+        txt.style.color = "#fff";
+        txt.innerText = "前缀";
+    }
     let svg = document.getElementById("refresh-barrage__svg");
     if (svg) {
         let p = svg.getElementsByTagName("path")[0];
@@ -86,9 +96,13 @@ function setRefreshBarrage() {
 function cancelRefreshBarrage() {
     StyleHook_remove("Ex_Style_RefreshBarrage");
     current_barrage_status = 0;
-    document.getElementById("refresh-barrage").classList.remove("ex-active");
-    document.getElementById("refresh-barrage__text").style.color = "";
-    document.getElementById("refresh-barrage__text").innerText = "前缀";
+    const btn = document.getElementById("refresh-barrage");
+    const txt = document.getElementById("refresh-barrage__text");
+    if (btn) btn.classList.remove("ex-active");
+    if (txt) {
+        txt.style.color = "";
+        txt.innerText = "前缀";
+    }
     let svg = document.getElementById("refresh-barrage__svg");
     if (svg) {
         let p = svg.getElementsByTagName("path")[0];

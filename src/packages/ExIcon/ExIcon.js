@@ -13,30 +13,85 @@ const PokeballIcon_svg = `<svg class="icon" width="24" height="24" viewBox="0 0 
     </g>
 </svg>`;
 
+function ExIcon_isVisible(el) {
+	if (!el) return false;
+	const rect = el.getBoundingClientRect();
+	return rect.width > 0 && rect.height > 0;
+}
+
 function initPkg_ExIcon() {
 	initPkg_ExIcon_insertDom();
 	initPkg_ExIcon_Func();
 }
 function initPkg_ExIcon_insertDom() {
+	if (document.querySelector(".ex-icon")) {
+		return;
+	}
+	const ver = typeof curVersion !== "undefined" ? curVersion : "";
 	let a = document.createElement("div");
 	a.className = "ex-icon";
-	a.innerHTML = `<a title="DouyuEx ver.${curVersion}">${PokeballIcon_svg}<i id="ex-icon__tip" class="ex-panel__tip"></i></a>`;
-	let b = document.querySelector(".PlayerToolbar-ContentCell .PlayerToolbar-Wealth");
-	if (b) {
-		b.insertBefore(a, b.childNodes[0]);
-	} else {
-		a.className += " ToolbarGiftArea-backpack";
-		a.style.width = "52px";
-		b = document.querySelector(".ToolbarGiftArea-container");
-		b.appendChild(a);
+	a.innerHTML = `<a title="DouyuEx ver.${ver}">${PokeballIcon_svg}<i id="ex-icon__tip" class="ex-panel__tip"></i></a>`;
+
+	const mountInto = (container, type) => {
+		if (!container) return false;
+		if (type === "wealth") {
+			container.insertBefore(a, container.childNodes[0] || null);
+			return true;
+		}
+		if (type === "aside") {
+			a.classList.add("ex-icon--compact");
+			const ref = container.querySelector(".InteractABAd-valueInfo") || container.querySelector("#js-backpack-enter") || container.childNodes[0] || null;
+			container.insertBefore(a, ref);
+			return true;
+		}
+		if (type === "gift") {
+			a.className += " ToolbarGiftArea-backpack";
+			a.style.width = "52px";
+			container.appendChild(a);
+			return true;
+		}
+		container.appendChild(a);
+		return true;
+	};
+
+	const visibleCandidates = [
+		{ el: document.querySelector(".PlayerToolbar-ContentCell .PlayerToolbar-Wealth"), type: "wealth" },
+		{ el: document.querySelector(".InteractABAd-aside"), type: "aside" },
+		{ el: document.querySelector(".ToolbarGiftArea-container"), type: "gift" },
+		{ el: document.getElementById("js-player-toolbar"), type: "toolbar" },
+	];
+
+	for (const item of visibleCandidates) {
+		if (ExIcon_isVisible(item.el)) {
+			mountInto(item.el, item.type);
+			return;
+		}
+	}
+
+	// Fallback if all toolbar containers are currently hidden (e.g. started in web-fullscreen)
+	const fallbackCandidates = [
+		{ el: document.querySelector(".InteractABAd-aside"), type: "aside" },
+		{ el: document.querySelector(".ToolbarGiftArea-container"), type: "gift" },
+		{ el: document.querySelector(".PlayerToolbar-ContentCell .PlayerToolbar-Wealth"), type: "wealth" },
+		{ el: document.getElementById("js-player-toolbar"), type: "toolbar" },
+	];
+	for (const item of fallbackCandidates) {
+		if (item.el) {
+			mountInto(item.el, item.type);
+			return;
+		}
 	}
 }
 function initPkg_ExIcon_Func() {
-	document.getElementsByClassName("ex-icon")[0].addEventListener("click", showExPanel);
+	const icon = document.getElementsByClassName("ex-icon")[0];
+	if (icon) {
+		icon.addEventListener("click", showExPanel);
+	}
 }
 
 function ExIcon_showTip(a) {
 	let d = document.getElementById("ex-icon__tip");
+	if (!d) return;
 	if (a == true) {
 		d.style.display = "block";
 	} else {

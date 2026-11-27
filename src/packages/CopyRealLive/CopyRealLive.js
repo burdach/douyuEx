@@ -7,6 +7,9 @@ function initPkg_CopyRealLive_Dom() {
 	CopyRealLive_insertIcon();
 }
 function CopyRealLive_insertIcon() {
+    if (document.getElementById("copy-real-live")) {
+        return;
+    }
 	let a = document.createElement("div");
     a.className = "Title-blockInline";
     a.id = "copy-real-live";
@@ -15,8 +18,10 @@ function CopyRealLive_insertIcon() {
     if (b && b.childNodes.length > 1) {
         b.insertBefore(a, b.childNodes[1]);
     } else {
-        b = getValidDom([".subTitleContainer__-vzhr"]);
-        b.appendChild(a);
+        b = getValidDom([".subTitleContainer__-vzhr", '[class*="subTitleContainer__"]']);
+        if (b) {
+            b.appendChild(a);
+        }
     }
 }
 
@@ -42,19 +47,26 @@ function CopyRealLive_copyUrl(qn) {
 }
 
 function CopyRealLive_copySelected() {
-    if (document.querySelectorAll(".tipItem-898596 > ul > li").length > 0) {
-        document.querySelectorAll(".tipItem-898596 > ul > li").forEach(item => {
-            if (item.className.includes("selected")) {
-                CopyRealLive_copyUrl(CopyRealLive_getQn(item.innerText));
+    const items = typeof getQualityItems === "function"
+        ? getQualityItems()
+        : Array.from(document.querySelectorAll('[class*="tipItem-"] > ul > li, .tipItem-898596 > ul > li'));
+    if (items.length > 0) {
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (typeof item.className === "string" && item.className.includes("selected")) {
+                CopyRealLive_copyUrl(CopyRealLive_getQn(item.innerText || item.textContent || ""));
+                return;
             }
-        });
-    } else {
-        CopyRealLive_copyUrl(0);
+        }
     }
+    CopyRealLive_copyUrl(0);
 }
 
 function initPkg_CopyRealLive_Func() {
-	document.getElementById("copy-real-live").addEventListener("click", CopyRealLive_copySelected);
+    const btn = document.getElementById("copy-real-live");
+    if (btn) {
+        btn.addEventListener("click", CopyRealLive_copySelected);
+    }
 
     let titNode = document.getElementsByClassName("RecommendViewTit-04ebd8");
     let tit = "";

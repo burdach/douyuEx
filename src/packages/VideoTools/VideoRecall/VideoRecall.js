@@ -13,10 +13,12 @@ function initPkg_VideoTools_VideoRecall_Func() {
         if (isInput) return;
         if (e.target && (e.target.isContentEditable || /^(input|textarea)$/i.test(e.target.tagName))) return;
         if (e.keyCode != 37 && e.keyCode != 39 && e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-        liveVideoNode = liveVideoNode || document.querySelector(".layout-Player-videoEntity video");
-        if (!liveVideoNode) return;
+        const video = typeof VideoTools_getVideoNode === "function"
+            ? VideoTools_getVideoNode()
+            : (liveVideoNode || document.querySelector(".layout-Player-videoEntity video, #__video2"));
+        if (!video) return;
         e.preventDefault();
-        liveVideoNode.currentTime = Math.max(0, (liveVideoNode.currentTime || 0) + (e.keyCode == 37 || e.key === "ArrowLeft" ? -3 : 3));
+        video.currentTime = Math.max(0, (video.currentTime || 0) + (e.keyCode == 37 || e.key === "ArrowLeft" ? -3 : 3));
     };
 
     document.addEventListener("keydown", VideoRecall_keydownHandler, true);

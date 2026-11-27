@@ -7,6 +7,9 @@ function initPkg_AudioLine_Dom() {
 	AudioLine_insertIcon();
 }
 function AudioLine_insertIcon() {
+    if (document.getElementById("ex-audio-line")) {
+        return;
+    }
 	let a = document.createElement("div");
     a.className = "Title-blockInline";
     a.id = "ex-audio-line";
@@ -15,19 +18,53 @@ function AudioLine_insertIcon() {
     if (b && b.childNodes.length > 1) {
         b.insertBefore(a, b.childNodes[1]);
     } else {
-        b = getValidDom([".subTitleContainer__-vzhr"]);
-        b.appendChild(a);
+        b = getValidDom([".subTitleContainer__-vzhr", '[class*="subTitleContainer__"]']);
+        if (b) {
+            b.appendChild(a);
+        }
     }
 }
 
+function AudioLine_findPauseBtn() {
+    const direct = getValidDom(['#js-player-controlbar [class*="pause-"]', ".pause-c594e8"]);
+    if (direct) return direct;
+    const leftGroup = document.querySelector('#js-player-controlbar [class*="left-"], .left-bfab3b, .left-d3671e');
+    if (leftGroup) {
+        const pauseSvg = leftGroup.querySelector('use[href*="pause_svg"], [id*="pause_svg"]');
+        if (pauseSvg) {
+            const btn = pauseSvg.closest('i, button, div');
+            if (btn && leftGroup.contains(btn)) return btn;
+        }
+        const firstIcon = leftGroup.querySelector('i[class*="icon-"]');
+        if (firstIcon) return firstIcon;
+    }
+    return null;
+}
+
 function AudioLine_switch() {
-    let pause = getValidDom([".pause-c594e8", ".icon-c8be96"]);
-    if (pause) pause.click(); // 暂停视频播放
-    getRealLive_Douyu(rid, true, false, "1428", (lurl) => {
-        createNewAudio_Douyu(videoPlayerArr.length, rid);
-    });
+    let pause = AudioLine_findPauseBtn();
+    if (pause) {
+        pause.click(); // 暂停视频播放
+    } else {
+        const video = typeof VideoTools_getVideoNode === "function"
+            ? VideoTools_getVideoNode()
+            : document.querySelector(".layout-Player-videoEntity video, #__video2");
+        if (video && typeof video.pause === "function") {
+            video.pause();
+        }
+    }
+    if (typeof getRealLive_Douyu === "function") {
+        getRealLive_Douyu(rid, true, false, "1428", (lurl) => {
+            if (typeof createNewAudio_Douyu === "function" && typeof videoPlayerArr !== "undefined") {
+                createNewAudio_Douyu(videoPlayerArr.length, rid);
+            }
+        });
+    }
 }
 
 function initPkg_AudioLine_Func() {
-	document.getElementById("ex-audio-line").addEventListener("click", AudioLine_switch);
+    const btn = document.getElementById("ex-audio-line");
+    if (btn) {
+        btn.addEventListener("click", AudioLine_switch);
+    }
 }

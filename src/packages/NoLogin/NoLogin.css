@@ -1,4 +1,5 @@
 /* 隐藏登录的提示 */
-.multiBitRate-da4b60 {
+.multiBitRate-da4b60,
+[class*="multiBitRate-"] {
   display: none !important;
 }

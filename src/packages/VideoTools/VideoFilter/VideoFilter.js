@@ -18,7 +18,11 @@ function isEdgeBrowser() {
 }
 
 function initPkg_VideoTools_Filter() {
-    liveVideoParentClassName = liveVideoNode.parentNode.className;
+    const video = VideoTools_getVideoNode();
+    const rawCls = video && video.parentNode && typeof video.parentNode.className === "string"
+        ? video.parentNode.className.trim()
+        : "";
+    liveVideoParentClassName = rawCls ? rawCls.split(/\s+/)[0] : "layout-Player-videoEntity";
     initPkg_VideoTools_Filter_Dom();
     initPkg_VideoTools_Filter_Func();
 }
@@ -95,45 +99,100 @@ function Filter_getPanelHtml() {
     `;
 }
 
+function Filter_toggleMirror() {
+    const video = VideoTools_getVideoNode();
+    if (!video || !video.parentNode) return;
+    if (!isMirror) {
+        isMirror = true;
+        transformCss.rotateY = "rotateY(180deg)";
+    } else {
+        isMirror = false;
+        transformCss.rotateY = "rotateY(0deg)";
+    }
+    video.parentNode.style.transition = "all .5s";
+    video.parentNode.style.transform = transformCss.rotateY + " " + transformCss.rotate + " " + transformCss.scale;
+}
+
+function Filter_toggleRotate() {
+    const video = VideoTools_getVideoNode();
+    if (!video || !video.parentNode) return;
+    rotateAngle += 90;
+    transformCss.rotate = `rotate(${String(rotateAngle)}deg)`;
+    video.parentNode.style.transition = "all .5s";
+    if ((rotateAngle / 90) % 2 !== 0 && video.videoWidth && video.videoHeight) {
+        if (window.innerWidth > window.innerHeight) {
+            transformCss.scale = "scale(" + String(video.videoHeight / video.videoWidth) + ")";
+        } else {
+            transformCss.scale = "scale(" + String(video.videoWidth / video.videoHeight) + ")";
+        }
+    } else {
+        transformCss.scale = "";
+    }
+    video.parentNode.style.transform = transformCss.rotateY + " " + transformCss.rotate + " " + transformCss.scale;
+}
+
+function Filter_togglePanorama() {
+    let tmp = document.getElementById("ex-panorama");
+    if (tmp) {
+        tmp.remove();
+        panorama = null;
+    } else {
+        let node = document.getElementById("__h5player") || document.getElementById("__video_container");
+        const video = VideoTools_getVideoNode();
+        if (!node || !video || typeof PanoramaVideo !== "function") return;
+        let dom = document.createElement("div");
+        dom.id = "ex-panorama";
+        dom.style.cssText = "width:100%;height:100%;z-index:1;background:black;";
+        node.insertBefore(dom, node.childNodes[0] || null);
+        panorama = new PanoramaVideo(dom, video);
+        panoramaAnimation(panorama);
+    }
+}
+
 function Filter_insertPanel() {
     const host = typeof VideoToolbarMenu_getFilterHost === "function"
         ? VideoToolbarMenu_getFilterHost()
         : null;
-    if (!host) {
-        return;
-    }
-    const wrap = document.createElement("div");
-    wrap.innerHTML = Filter_getPanelHtml();
-    host.appendChild(wrap.firstElementChild);
-
-    let b = document.getElementsByClassName("menu-da2a9e")[0];
-    if (!b) {
-        return;
+    if (host && !host.querySelector(".filter__wrap")) {
+        const wrap = document.createElement("div");
+        wrap.innerHTML = Filter_getPanelHtml();
+        if (wrap.firstElementChild) {
+            host.appendChild(wrap.firstElementChild);
+        }
     }
 
-    let domPanorama = document.createElement("li");
-    domPanorama.id = "filter__panorama";
-    domPanorama.innerText = "全景";
-    b.insertBefore(domPanorama, b.childNodes[1]);
+    VideoTools_registerContextMenu("filter", (menu) => {
+        if (menu.querySelector("#filter__reset")) {
+            return;
+        }
+        let domPanorama = document.createElement("li");
+        domPanorama.id = "filter__panorama";
+        domPanorama.innerText = "全景";
+        domPanorama.addEventListener("click", Filter_togglePanorama);
+        menu.insertBefore(domPanorama, menu.childNodes[1] || null);
 
-    let domMirror = document.createElement("li");
-    domMirror.id = "filter__mirror";
-    domMirror.innerText = "镜像画面";
-    b.insertBefore(domMirror, b.childNodes[1]);
+        let domMirror = document.createElement("li");
+        domMirror.id = "filter__mirror";
+        domMirror.innerText = "镜像画面";
+        domMirror.addEventListener("click", Filter_toggleMirror);
+        menu.insertBefore(domMirror, menu.childNodes[1] || null);
 
-    let domRotate = document.createElement("li");
-    domRotate.id = "filter__rotate";
-    domRotate.innerText = "旋转画面";
-    b.insertBefore(domRotate, b.childNodes[1]);
+        let domRotate = document.createElement("li");
+        domRotate.id = "filter__rotate";
+        domRotate.innerText = "旋转画面";
+        domRotate.addEventListener("click", Filter_toggleRotate);
+        menu.insertBefore(domRotate, menu.childNodes[1] || null);
 
-    let domReset = document.createElement("li");
-    domReset.id = "filter__reset";
-    domReset.innerText = "重置";
-    b.insertBefore(domReset, b.childNodes[1]);
+        let domReset = document.createElement("li");
+        domReset.id = "filter__reset";
+        domReset.innerText = "重置";
+        domReset.addEventListener("click", resetVideoFilter);
+        menu.insertBefore(domReset, menu.childNodes[1] || null);
 
-    let domDivider = document.createElement("div");
-    domDivider.className = "divider-f9d33d";
-    b.insertBefore(domDivider, b.childNodes[1]);
+        let domDivider = document.createElement("div");
+        domDivider.className = "divider-f9d33d";
+        menu.insertBefore(domDivider, menu.childNodes[1] || null);
+    });
 }
 
 function Filter_insertEnhanceModal() {
@@ -177,76 +236,58 @@ function initPkg_VideoTools_Filter_Func() {
         const switchElement = document.getElementById("switch__enhance");
         const slider = document.getElementById("slider__enhance");
         const enhanceModal = document.getElementsByClassName("enhance-modal__panel-wrap")[0];
-        const videoDom = document.querySelector("video");
+        const videoDom = VideoTools_getVideoNode() || document.querySelector("video");
         if (isEnhanceQuality) {
-            slider.style.left = "20px";
-            switchElement.style.background = "#369";
-            liveVideoNode.style.imageRendering = "crisp-edges";
-            liveVideoNode.style.imageRendering = "-webkit-optimize-contrast";
-            liveVideoNode.style.imageRendering = "optimize-contrast";
-            // 显示增强画质提示弹窗
-            enhanceModal.style.display = "flex";
-            videoDom.style.zIndex = "10";
-            videoDom.style.cursor = "auto";
+            if (slider) slider.style.left = "20px";
+            if (switchElement) switchElement.style.background = "#369";
+            if (videoDom) {
+                videoDom.style.imageRendering = "crisp-edges";
+                videoDom.style.imageRendering = "-webkit-optimize-contrast";
+                videoDom.style.imageRendering = "optimize-contrast";
+                videoDom.style.zIndex = "10";
+                videoDom.style.cursor = "auto";
+            }
+            if (enhanceModal) enhanceModal.style.display = "flex";
         } else {
-            slider.style.left = "0px";
-            switchElement.style.background = "#ccc";
-            liveVideoNode.style.imageRendering = "";
-            // 隐藏增强画质提示弹窗
-            enhanceModal.style.display = "none";
-            videoDom.style.zIndex = "0";
+            if (slider) slider.style.left = "0px";
+            if (switchElement) switchElement.style.background = "#ccc";
+            if (videoDom) {
+                videoDom.style.imageRendering = "";
+                videoDom.style.zIndex = "0";
+            }
+            if (enhanceModal) enhanceModal.style.display = "none";
         }
             });
         }
     }
     setScrollFunc(document.getElementById("scroll__bright"), document.getElementById("bar__bright"), document.getElementById("mask__bright"), (data) => {
+        const video = VideoTools_getVideoNode();
+        if (!video) return;
         currentBrightness = `brightness(${ data }%)`;
-        liveVideoNode.style.filter = `${ currentBrightness } ${ currentContrast } ${ currentSaturate }`;
+        video.style.filter = `${ currentBrightness } ${ currentContrast } ${ currentSaturate }`;
     });
     setScrollFunc(document.getElementById("scroll__contrast"), document.getElementById("bar__contrast"), document.getElementById("mask__contrast"), (data) => {
+        const video = VideoTools_getVideoNode();
+        if (!video) return;
         currentContrast = `contrast(${ data }%)`;
-        liveVideoNode.style.filter = `${ currentBrightness } ${ currentContrast } ${ currentSaturate }`;
+        video.style.filter = `${ currentBrightness } ${ currentContrast } ${ currentSaturate }`;
     });
     setScrollFunc(document.getElementById("scroll__saturate"), document.getElementById("bar__saturate"), document.getElementById("mask__saturate"), (data) => {
+        const video = VideoTools_getVideoNode();
+        if (!video) return;
         currentSaturate = `saturate(${ data }%)`;
-        liveVideoNode.style.filter = `${ currentBrightness } ${ currentContrast } ${ currentSaturate }`;
+        video.style.filter = `${ currentBrightness } ${ currentContrast } ${ currentSaturate }`;
     });
 
-    document.getElementById("filter__reset").addEventListener("click", () => {
-        resetVideoFilter();
-    });
-    document.getElementById("filter__reset2").addEventListener("click", () => {
-        resetVideoFilter();
-    });
-    document.getElementById("filter__mirror").addEventListener("click", () => {
-        if (!isMirror) {
-            isMirror = true;
-            transformCss.rotateY = "rotateY(180deg)";
-        } else {
-            isMirror = false;
-            transformCss.rotateY = "rotateY(0deg)";
-        }
-        liveVideoNode.parentNode.style.transition = "all .5s";
-        liveVideoNode.parentNode.style.transform = transformCss.rotateY + " " + transformCss.rotate + " " + transformCss.scale;
-    });
+    const resetBtn2 = document.getElementById("filter__reset2");
+    if (resetBtn2) {
+        resetBtn2.addEventListener("click", () => {
+            resetVideoFilter();
+        });
+    }
 
-    document.getElementById("filter__rotate").addEventListener("click", () => {
-        rotateAngle += 90;
-        transformCss.rotate = `rotate(${String(rotateAngle)}deg)`;
-        liveVideoNode.parentNode.style.transition = "all .5s";
-        if ((rotateAngle/90) % 2 !== 0) {
-            if (window.innerWidth > window.innerHeight) {
-                transformCss.scale = "scale(" + String(liveVideoNode.videoHeight / liveVideoNode.videoWidth) + ")";
-            } else {
-                transformCss.scale = "scale(" + String(liveVideoNode.videoWidth / liveVideoNode.videoHeight) + ")";
-            }
-        } else {
-            transformCss.scale = "";
-        }
-        liveVideoNode.parentNode.style.transform = transformCss.rotateY + " " + transformCss.rotate + " " + transformCss.scale;
-    });
-
-    document.getElementById("filter__select").onchange = function() {
+    const filterSelect = document.getElementById("filter__select");
+    if (filterSelect) filterSelect.onchange = function() {
         let option = this.options[this.selectedIndex].text;
         switch (option) {
             case "default":
@@ -314,22 +355,6 @@ function initPkg_VideoTools_Filter_Func() {
                 break;
         }
     }
-
-    document.getElementById("filter__panorama").addEventListener("click", () => {
-        let tmp = document.getElementById("ex-panorama");
-        if (tmp) {
-            tmp.remove();
-            panorama = null;
-        } else {
-            let node = document.getElementById("__h5player");
-            let dom = document.createElement("div");
-            dom.id = "ex-panorama";
-            dom.style = "width:100%;height:100%;z-index:1;background:black;"
-            node.insertBefore(dom, node.childNodes[0]);
-            panorama = new PanoramaVideo(dom, liveVideoNode);
-            panoramaAnimation(panorama);
-        }
-    })
 }
 
 function Filter_showPanel() {
@@ -347,23 +372,36 @@ function Filter_hidePanel() {
 }
 
 function resetVideoFilter() {
+    const video = VideoTools_getVideoNode();
     StyleHook_remove("Ex_Style_Filter");
-    document.getElementById("filter__select").selectedIndex = 0;
-    liveVideoNode.style.filter = "";
+    const filterSelect = document.getElementById("filter__select");
+    if (filterSelect) filterSelect.selectedIndex = 0;
+    if (video) {
+        video.style.filter = "";
+    }
     rotateAngle = 0;
+    isMirror = false;
     transformCss = {
         rotateY: "",
         rotate: "",
         scale: "",
+    };
+    if (video && video.parentNode) {
+        video.parentNode.style.transform = "";
     }
-    liveVideoNode.parentNode.style.transform = "";
-    document.getElementById("bar__bright").style.left = "100px";
-    document.getElementById("bar__contrast").style.left = "100px";
-    document.getElementById("bar__saturate").style.left = "100px";
+    const barBright = document.getElementById("bar__bright");
+    const barContrast = document.getElementById("bar__contrast");
+    const barSaturate = document.getElementById("bar__saturate");
+    if (barBright) barBright.style.left = "100px";
+    if (barContrast) barContrast.style.left = "100px";
+    if (barSaturate) barSaturate.style.left = "100px";
 
-    document.getElementById("mask__bright").style.width = "100px";
-    document.getElementById("mask__contrast").style.width = "100px";
-    document.getElementById("mask__saturate").style.width = "100px";
+    const maskBright = document.getElementById("mask__bright");
+    const maskContrast = document.getElementById("mask__contrast");
+    const maskSaturate = document.getElementById("mask__saturate");
+    if (maskBright) maskBright.style.width = "100px";
+    if (maskContrast) maskContrast.style.width = "100px";
+    if (maskSaturate) maskSaturate.style.width = "100px";
 
     // 重置增强画质（只在 Edge 浏览器中执行）
     if (isEdgeBrowser()) {
@@ -376,7 +414,9 @@ function resetVideoFilter() {
         if (switchEnhance) {
             switchEnhance.style.background = "#ccc";
         }
-        liveVideoNode.style.imageRendering = "";
+        if (video) {
+            video.style.imageRendering = "";
+        }
         // 隐藏增强画质提示弹窗
         const enhanceModal = document.getElementsByClassName("enhance-modal__panel-wrap")[0];
         if (enhanceModal) {
@@ -393,27 +433,30 @@ function resetVideoFilter() {
 
     // 重置缩放
     let domVideoWrap = document.getElementsByClassName("layout-Player-videoEntity")[0];
-    domVideoWrap.style.transform = "";
-    domVideoWrap.style.transformOrigin = "";
+    if (domVideoWrap) {
+        domVideoWrap.style.transform = "";
+        domVideoWrap.style.transformOrigin = "";
+    }
     videoScale = 1;
 
     // 重置影院模式
     StyleHook_remove("Ex_Style_Cinema");
 
     // 重置视频倍速
-    liveVideoNode.playbackRate = 1;
+    if (video) {
+        video.playbackRate = 1;
+    }
 }
 
-function panoramaAnimation(panorama) {
+function panoramaAnimation(p) {
+    if (!p || panorama !== p) return;
     requestAnimationFrame(() => {
-        panoramaAnimation(panorama)
-    })
-    panorama.update();
+        panoramaAnimation(p);
+    });
+    p.update();
 }
 
 function setVideoFilter(style) {
-    // liveVideoNode.style.filter = text;
-    // liveVideoNode.style.webkitFilter = text;
     StyleHook_remove("Ex_Style_Filter");
     StyleHook_set("Ex_Style_Filter", style);
     Filter_hidePanel();
@@ -423,6 +466,9 @@ function setScrollFunc(scrollDom, barDom, maskDom, callback) {
     let scroll = scrollDom;
     let bar = barDom;
     let mask = maskDom;
+    if (!scroll || !bar || !mask) {
+        return;
+    }
     let barleft = 0;
     bar.onmousedown = function (e) {
         let event = e || window.event;

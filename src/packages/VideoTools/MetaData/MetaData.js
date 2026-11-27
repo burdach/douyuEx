@@ -1,12 +1,15 @@
 let videoMetaData = null;
 function initPkg_VideoTools_MetaData() {
+  initPkg_VideoTools_MetaData_Dom();
   MetaData_init();
 }
 
 function initPkg_VideoTools_MetaData_Dom() {
-  if (!videoMetaData) return;
-  if (!videoMetaData.dy_cpu_model && !videoMetaData.dy_gpu_model && !videoMetaData.dy_device_model && !videoMetaData.dy_os_version && !videoMetaData.z_canvas_code) return;
-  let a = document.createElement("li");
+  VideoTools_registerContextMenu("metadata", (menu) => {
+    if (!videoMetaData) return false;
+    if (!videoMetaData.dy_cpu_model && !videoMetaData.dy_gpu_model && !videoMetaData.dy_device_model && !videoMetaData.dy_os_version && !videoMetaData.z_canvas_code) return false;
+    if (menu.querySelector("#ex-metadata")) return;
+    let a = document.createElement("li");
     a.id = "ex-metadata";
     a.innerHTML = `
     主播配置信息
@@ -18,34 +21,33 @@ function initPkg_VideoTools_MetaData_Dom() {
       ${videoMetaData.z_canvas_code ? `<li title="${videoMetaData.z_canvas_code}">🎥场景<br/>${videoMetaData.z_canvas_code}</li>` : ``}
     </ul>
     `;
-
-    let b = document.getElementsByClassName("menu-da2a9e")[0];
-    b.insertBefore(a, b.childNodes[1]);
+    menu.insertBefore(a, menu.childNodes[1] || null);
+  });
 }
 
 function MetaData_init() {
+  if (typeof getRealLive_Douyu !== "function") return;
   getRealLive_Douyu(rid, true, false, "1", (lurl) => {
-    if (lurl != "" || lurl != null) {
+    if (lurl != "" && lurl != null) {
       if (lurl == "None") {
         showMessage("房间未开播或其他错误", "error");
         return;
       }
-      let lurl_host_arr = String(lurl).split("/live");
-      let lurl_host = "";
-      if (lurl_host_arr.length > 0) {
-        lurl_host = lurl_host_arr[0];
-      }
-      let id = "Fake"
+      let id = "Fake";
+      let existing = document.getElementById("exVideoDiv" + id);
+      if (existing) existing.remove();
       let a = document.createElement("div");
       let html = "";
       a.id = "exVideoDiv" + id;
       a.className = "exVideoDiv";
       html += "<video controls='controls' class='exVideoPlayer' id='exVideoPlayer" + String(id) + "'></video><div class='exVideoScale' id='exVideoScale" + String(id) + "'></div>";
       a.innerHTML = html;
-      let b = getValidDom([".layout-Main", ".playerWrap__8wGvw", ".live-next-body"]);
-      b.insertBefore(a, b.childNodes[0]);
-      if (flvjs.isSupported()) {
+      let b = getValidDom([".layout-Main", ".playerWrap__8wGvw", ".live-next-body"]) || document.body;
+      if (!b) return;
+      b.insertBefore(a, b.childNodes[0] || null);
+      if (typeof flvjs !== "undefined" && flvjs.isSupported()) {
         let videoElement = document.getElementById("exVideoPlayer" + id);
+        if (!videoElement) return;
         let flvPlayer = flvjs.createPlayer(
           {
             type: "flv",
@@ -58,9 +60,9 @@ function MetaData_init() {
             videoMetaData = e.metadata;
             let box = document.getElementById("exVideoDiv" + String(id));
             let exVideoPlayer = document.getElementById("exVideoPlayer" + String(id));
-            flvPlayer.destroy();
-            exVideoPlayer.remove();
-            box.remove();
+            try { flvPlayer.destroy(); } catch (err) {}
+            if (exVideoPlayer) exVideoPlayer.remove();
+            if (box) box.remove();
             initPkg_VideoTools_MetaData_Dom();
           }
         });
