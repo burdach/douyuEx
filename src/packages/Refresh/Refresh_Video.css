@@ -64,14 +64,12 @@
     stroke: #ff6600;
 }
 
-/* 隐藏礼物栏 - Live-Next 布局 */
+/* 隐藏礼物栏 - Live-Next 布局（保留 .case__f4yex 内的 #js-player-controlbar 播放器控制栏） */
 body.live-next-body.ex-hide-gift-bar .interactive__8Ht4-,
 body.live-next-body.ex-hide-gift-bar #js-player-main [class*="interactive__"],
 body.live-next-body.ex-hide-gift-bar #js-player-toolbar,
 body.live-next-body.ex-hide-gift-bar .PlayerToolbar,
-body.live-next-body.ex-hide-gift-bar .PlayerToolbar-ContentRow,
-body.live-next-body.ex-hide-gift-bar .case__f4yex,
-body.live-next-body.ex-hide-gift-bar #js-player-main [class*="case__"] {
+body.live-next-body.ex-hide-gift-bar .PlayerToolbar-ContentRow {
     display: none !important;
     height: 0 !important;
     min-height: 0 !important;
