@@ -1,5 +1,5 @@
 // 全局变量及公共函数
-var curVersion = "2026.11.27.01";
+var curVersion = "2026.11.27.02";
 var exTimer = 0; // 总时钟句柄
 
 function extractRoomId() {
