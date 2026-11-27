@@ -54,7 +54,7 @@ function VideoTools_ensureContextMenuObserver() {
         VideoTools_contextMenuObserver = null;
         VideoTools_contextMenuTarget = null;
     }
-    const container = getValidDom(["#__h5player", "#__video_container", "#js-player-video", ".layout-Player-videoEntity"]) || document.body;
+    const container = getValidDom(["#__video_container", ".room-Player-Box", "#__h5player", "#js-player-video", ".layout-Player-videoEntity"]) || document.body;
     if (!container) {
         return;
     }

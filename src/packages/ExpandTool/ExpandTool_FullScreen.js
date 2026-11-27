@@ -118,14 +118,22 @@ function findWebFullscreenBtn() {
         }
 
         // Tier 2: Tooltip / title / aria-label match inside right group
-        const candidates = rightGroup.querySelectorAll('i, button, div');
-        for (let i = 0; i < candidates.length; i++) {
-            const el = candidates[i];
+        const tips = rightGroup.querySelectorAll('[class*="tooltip-"]');
+        for (let i = 0; i < tips.length; i++) {
+            const tip = tips[i];
+            const tipText = (tip.textContent || "").trim();
+            if (tipText.includes("网页全屏") && !tipText.includes("退出")) {
+                const target = tip.closest('i, button, [role="button"]') || tip.parentElement;
+                if (target && rightGroup.contains(target)) {
+                    return target;
+                }
+            }
+        }
+        const labeled = rightGroup.querySelectorAll('i, button, [role="button"], div');
+        for (let i = 0; i < labeled.length; i++) {
+            const el = labeled[i];
             const label = (el.getAttribute("title") || el.getAttribute("aria-label") || "").trim();
-            const tip = el.querySelector('[class*="tooltip-"]');
-            const tipText = tip ? (tip.textContent || "").trim() : "";
-            const text = label || tipText;
-            if (text.includes("网页全屏") && !text.includes("退出")) {
+            if (label.includes("网页全屏") && !label.includes("退出")) {
                 return el;
             }
         }
