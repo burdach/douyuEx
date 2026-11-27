@@ -91,7 +91,7 @@ function initPkg() {
   safeInit("Night", initPkg_Night);
   safeInit("ExIcon", initPkg_ExIcon);
   safeInit("ExPanel", initPkg_ExPanel);
-  safeInit("RealAudience", initPkg_RealAudience);
+  // safeInit("RealAudience", initPkg_RealAudience); // disabled: removed real-audience info bar
   safeInit("CopyRealLive", initPkg_CopyRealLive);
   safeInit("AudioLine", initPkg_AudioLine);
   safeInit("RemoveAD", initPkg_RemoveAD);
